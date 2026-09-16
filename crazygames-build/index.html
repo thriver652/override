@@ -183,6 +183,12 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
 .node-pb{font-size:10px;opacity:.7;margin-left:6px}
 @media (prefers-reduced-motion:reduce){.shake,.overlay.show,.patch{animation:none}}
 
+.foot{display:flex;flex-direction:column;align-items:center;gap:6px}
+.linkish{background:none;border:0;color:var(--dim);font:600 10px var(--mono);letter-spacing:.2em;cursor:pointer;padding:6px;text-decoration:underline;text-underline-offset:3px}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{max-width:420px;width:100%;background:var(--bg2);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.modal-card p{margin:0;font-size:13px;line-height:1.55;color:var(--fg);user-select:text;-webkit-user-select:text}
+
 </style>
 </head>
 <body>
@@ -213,6 +219,7 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
     </div>
     <div class="foot">
       <span id="players-today"></span>
+      <button class="linkish" id="btn-privacy">PRIVACY</button>
     </div>
   </section>
 
@@ -302,6 +309,13 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
 
 </div>
 <div id="toast"></div>
+<div id="privacy" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="eyebrow">// PRIVACY &amp; TERMS</div>
+    <p>OVERRIDE stores your progress (XP, rank, themes, streak) only on this device. If you submit a Daily Breach score, the tag you type and your score are shown on the public leaderboard. The game sends anonymous gameplay stats (nodes reached, score, whether you used REBOOT, and any crash message) to help balance the game; no names, accounts, emails or device identifiers are collected. On game portals, ads are served by the portal under their own policies. Play fair: the leaderboard is reset daily and suspicious scores are removed.</p>
+    <button class="ghost small" id="btn-privacy-close">CLOSE</button>
+  </div>
+</div>
 <script>
 'use strict';
 /* ===================== CONFIG ===================== */
@@ -440,15 +454,18 @@ const pick = (arr,rng=Math.random)=>arr[Math.floor(rng()*arr.length)];
 const Portal = (()=>{
   const q = new URLSearchParams(location.search).get('portal');
   const host = location.hostname;
-  const kind = q || (host.includes('crazygames')?'crazygames': host.includes('poki')?'poki':'none');
-  let sdk=null, ready=false, lastMidgame=0;
+  // CrazyGames serves games on several domains (crazygames.com, 1001juegos.com, …) inside an iframe, so try their SDK whenever
+  // we're embedded or on a CrazyGames host; the SDK reports environment 'disabled' elsewhere and we stay in 'none' mode.
+  const embedded = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+  const kind = q || (host.includes('poki')?'poki': (host.includes('crazygames') || embedded)?'crazygames':'none');
+  let sdk=null, ready=false, lastMidgame=0, kindOut=kind;
   function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
   async function init(){
     try{
       if(kind==='crazygames'){
         await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js');
         await window.CrazyGames.SDK.init(); sdk=window.CrazyGames.SDK;
-        ready = sdk.environment!=='disabled';
+        ready = sdk.environment!=='disabled'; if(!ready) kindOut='none';
         if(ready){ try{ sdk.game.loadingStart(); sdk.game.loadingStop(); }catch(e){} }
       } else if(kind==='poki'){
         await loadScript('https://game-cdn.poki.com/scripts/v2/poki-sdk.js');
@@ -459,7 +476,7 @@ const Portal = (()=>{
   function pauseForAd(){ Audio.setAdMuted(true); }
   function resumeAfterAd(){ Audio.setAdMuted(false); }
   return {
-    kind, init, isReady:()=>ready,
+    get kind(){ return kindOut; }, init, isReady:()=>ready,
     gameplayStart(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStart() : sdk.gameplayStart(); }catch(e){} },
     gameplayStop(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStop() : sdk.gameplayStop(); }catch(e){} },
     happytime(){ try{ if(!ready) return; if(kind==='crazygames') sdk.game.happytime(); }catch(e){} },
@@ -871,8 +888,11 @@ $('#btn-daily').onclick=()=>{ const d=save.daily[todayKey()]; if(d){ toast(`alre
 $('#btn-board').onclick=openBoard; $('#btn-board-back').onclick=()=>show('home');
 $('#btn-profile').onclick=()=>{ renderProfile(); show('profile'); }; $('#btn-profile-back').onclick=()=>{ refreshHome(); show('home'); };
 $('#btn-sound').onclick=()=>{ save.sound=!save.sound; Audio.setMuted(!save.sound); persist(); refreshHome(); Audio.ensure(); Audio.tap(); };
-$('#btn-again').onclick=async()=>{ if(save.runs>0 && save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak(); startRun(false); };   // midgame ad at a natural break, every Nth run, 3-min cooldown respected $('#btn-home').onclick=()=>{ refreshHome(); show('home'); refreshStats(); };
+/* midgame ad at a natural break (pressing AGAIN), every Nth run; the 3-minute cooldown is enforced in Portal.adBreak */
+$('#btn-again').onclick=async()=>{ if(save.runs>0 && save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak(); startRun(false); };
+$('#btn-home').onclick=()=>{ refreshHome(); show('home'); refreshStats(); };
 $('#btn-share').onclick=shareResult; $('#btn-reboot').onclick=reboot;
+$('#btn-privacy').onclick=()=>$('#privacy').classList.remove('hidden'); $('#btn-privacy-close').onclick=()=>$('#privacy').classList.add('hidden'); $('#privacy').onclick=e=>{ if(e.target.id==='privacy') $('#privacy').classList.add('hidden'); };
 $('#btn-submit').onclick=async()=>{ const name=$('#name-input').value.trim().replace(/[^\w\-]/g,'').slice(0,12); if(!name){ toast('enter a tag'); return; } const d=save.daily[todayKey()]; if(!d||d.submitted){ toast('already submitted'); return; }
   $('#submit-status').textContent='sending…'; const r=await Backend.submit(todayKey(),name,d.score,d.nodes);
   if(r&&r.ok){ d.submitted=true; save.tag=name; persist(); $('#submit-status').textContent=`on the board · rank #${r.rank||'?'}`; toast('SUBMITTED'); } else { $('#submit-status').textContent='failed: '+(r&&r.reason||'unknown'); } };

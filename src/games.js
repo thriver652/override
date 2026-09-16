@@ -357,8 +357,11 @@ $('#btn-daily').onclick=()=>{ const d=save.daily[todayKey()]; if(d){ toast(`alre
 $('#btn-board').onclick=openBoard; $('#btn-board-back').onclick=()=>show('home');
 $('#btn-profile').onclick=()=>{ renderProfile(); show('profile'); }; $('#btn-profile-back').onclick=()=>{ refreshHome(); show('home'); };
 $('#btn-sound').onclick=()=>{ save.sound=!save.sound; Audio.setMuted(!save.sound); persist(); refreshHome(); Audio.ensure(); Audio.tap(); };
-$('#btn-again').onclick=async()=>{ if(save.runs>0 && save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak(); startRun(false); };   // midgame ad at a natural break, every Nth run, 3-min cooldown respected $('#btn-home').onclick=()=>{ refreshHome(); show('home'); refreshStats(); };
+/* midgame ad at a natural break (pressing AGAIN), every Nth run; the 3-minute cooldown is enforced in Portal.adBreak */
+$('#btn-again').onclick=async()=>{ if(save.runs>0 && save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak(); startRun(false); };
+$('#btn-home').onclick=()=>{ refreshHome(); show('home'); refreshStats(); };
 $('#btn-share').onclick=shareResult; $('#btn-reboot').onclick=reboot;
+$('#btn-privacy').onclick=()=>$('#privacy').classList.remove('hidden'); $('#btn-privacy-close').onclick=()=>$('#privacy').classList.add('hidden'); $('#privacy').onclick=e=>{ if(e.target.id==='privacy') $('#privacy').classList.add('hidden'); };
 $('#btn-submit').onclick=async()=>{ const name=$('#name-input').value.trim().replace(/[^\w\-]/g,'').slice(0,12); if(!name){ toast('enter a tag'); return; } const d=save.daily[todayKey()]; if(!d||d.submitted){ toast('already submitted'); return; }
   $('#submit-status').textContent='sending…'; const r=await Backend.submit(todayKey(),name,d.score,d.nodes);
   if(r&&r.ok){ d.submitted=true; save.tag=name; persist(); $('#submit-status').textContent=`on the board · rank #${r.rank||'?'}`; toast('SUBMITTED'); } else { $('#submit-status').textContent='failed: '+(r&&r.reason||'unknown'); } };

@@ -135,15 +135,18 @@ const pick = (arr,rng=Math.random)=>arr[Math.floor(rng()*arr.length)];
 const Portal = (()=>{
   const q = new URLSearchParams(location.search).get('portal');
   const host = location.hostname;
-  const kind = q || (host.includes('crazygames')?'crazygames': host.includes('poki')?'poki':'none');
-  let sdk=null, ready=false, lastMidgame=0;
+  // CrazyGames serves games on several domains (crazygames.com, 1001juegos.com, …) inside an iframe, so try their SDK whenever
+  // we're embedded or on a CrazyGames host; the SDK reports environment 'disabled' elsewhere and we stay in 'none' mode.
+  const embedded = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+  const kind = q || (host.includes('poki')?'poki': (host.includes('crazygames') || embedded)?'crazygames':'none');
+  let sdk=null, ready=false, lastMidgame=0, kindOut=kind;
   function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
   async function init(){
     try{
       if(kind==='crazygames'){
         await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js');
         await window.CrazyGames.SDK.init(); sdk=window.CrazyGames.SDK;
-        ready = sdk.environment!=='disabled';
+        ready = sdk.environment!=='disabled'; if(!ready) kindOut='none';
         if(ready){ try{ sdk.game.loadingStart(); sdk.game.loadingStop(); }catch(e){} }
       } else if(kind==='poki'){
         await loadScript('https://game-cdn.poki.com/scripts/v2/poki-sdk.js');
@@ -154,7 +157,7 @@ const Portal = (()=>{
   function pauseForAd(){ Audio.setAdMuted(true); }
   function resumeAfterAd(){ Audio.setAdMuted(false); }
   return {
-    kind, init, isReady:()=>ready,
+    get kind(){ return kindOut; }, init, isReady:()=>ready,
     gameplayStart(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStart() : sdk.gameplayStart(); }catch(e){} },
     gameplayStop(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStop() : sdk.gameplayStop(); }catch(e){} },
     happytime(){ try{ if(!ready) return; if(kind==='crazygames') sdk.game.happytime(); }catch(e){} },

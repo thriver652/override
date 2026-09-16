@@ -19,7 +19,7 @@ async def main():
             await page.click('#btn-play')
             await page.wait_for_timeout(2300)  # countdown
             # bot: play up to 25 nodes by always taking a legal action for the current game type
-            for i in range(25):
+            for i in range(34):
                 if not await page.evaluate('Run.active'): break
                 await page.wait_for_timeout(120)
                 info = await page.evaluate('({key:Run.lastType, node:Run.node, lie:!!document.querySelector(".instr .lie")})')
@@ -59,6 +59,13 @@ async def main():
                         await page.click(f'.choice:has-text("{"TRUE" if val==int(rhs) else "FALSE"}")')
                     elif key == 'stroop':
                         want = await page.evaluate('''() => { const w=document.querySelector(".bigword"); const lie=!!document.querySelector(".instr .hi") && document.querySelector(".instr").textContent.includes("SAYS"); const ink=getComputedStyle(w).color; const choices=[...document.querySelectorAll(".choice")]; const target = lie ? choices.find(c=>c.textContent===w.textContent) : choices.find(c=>getComputedStyle(c).color===ink); target.click(); }''')
+                    elif key == 'count':
+                        target = await page.evaluate('document.querySelector(".instr .hi").textContent')
+                        n = await page.evaluate(f'''() => [...document.querySelectorAll("#arena span")].filter(s=>s.textContent==={target!r}).length''')
+                        await page.click(f'.choice:text-is("{n}")')
+                    elif key == 'react':
+                        await page.wait_for_function('document.querySelector(".bigword") && document.querySelector(".bigword").textContent==="TAP!"', timeout=3500)
+                        await page.dispatch_event('.tap-any', 'pointerdown')
                     elif key == 'hold':
                         line = await page.evaluate('parseFloat(document.querySelector(".bar-line").style.left)/100')
                         await page.dispatch_event('.tap-any', 'pointerdown', {'pointerId': 1})
@@ -75,10 +82,15 @@ async def main():
                 await page.evaluate('Run.lives=0; gameOver()')
             await page.wait_for_timeout(1200)
             await page.screenshot(path=f'{ROOT}/test/{tag}_over.png')
+            # reboot (free outside portals) -> run resumes with 1 life
+            await page.click('#btn-reboot'); await page.wait_for_timeout(2400)
+            print(tag, 'after reboot:', await page.evaluate('({active:Run.active,lives:Run.lives,node:Run.node,rebooted:Run.rebooted})'))
+            await page.evaluate('Run.lives=0; gameOver()'); await page.wait_for_timeout(800)
+            print(tag, 'runs counted:', await page.evaluate('save.runs'), '| reboot hidden:', await page.evaluate('document.querySelector("#btn-reboot").classList.contains("hidden")'))
             print(tag, 'over screen score:', await page.inner_text('#over-score'), '| xp label:', await page.inner_text('#xp-label'))
             await page.click('#btn-home'); await page.wait_for_timeout(200)
-            await page.click('#btn-themes'); await page.wait_for_timeout(200)
-            await page.screenshot(path=f'{ROOT}/test/{tag}_themes.png')
+            await page.click('#btn-profile'); await page.wait_for_timeout(200)
+            await page.screenshot(path=f'{ROOT}/test/{tag}_profile.png')
             await ctx.close()
         await run({'width': 390, 'height': 844}, 'mobile', True)
         await run({'width': 1280, 'height': 800}, 'desktop', False)

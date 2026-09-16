@@ -1,16 +1,31 @@
 # OVERRIDE — launch guide
 
-You vs. a rogue AI. Endless rapid-fire micro-challenges that speed up as you survive. Daily seeded run with a global board. Single HTML file, no build step needed to run, no runtime AI cost.
+You vs. a rogue AI. Endless rapid-fire micro-challenges that speed up as you survive — and from node 3 the AI starts lying to you. Daily seeded run with a global board. Single HTML file, no runtime AI cost.
+
+## What's in the game (v1.1)
+
+- **11 challenge types**: tap, odd-one-out, timing bar, memory sequence, order, swipe, math, Stroop, hold, count, reflex.
+- **The AI lies** from node 3 (18% → 40% of eligible nodes). A struck-through instruction means the opposite is true. Big "IT LIED" / "CAUGHT IT" reveal after each one.
+- **FIREWALL** every 10 nodes: 3 challenges in a row, 15% faster, 1.5× points. Clear all three and you get +1 integrity back.
+- **Patches** (power-ups) earned every 8-combo: SLOW-MO (timer 60% slower for 3 nodes), SHIELD (absorb one miss), SCAN (AI can't lie for 3 nodes). Tap them in the HUD or press 1/2/3.
+- **REBOOT**: once per run, on game over, continue with 1 integrity and keep your score. On CrazyGames/Poki this plays a **rewarded ad** (their best-paying format); elsewhere it's free.
+- **Personal-best ghost** in the HUD and a "NEW BEST" moment when you pass it.
+- **Weakness analysis** on game over ("WEAKNESS: STROOP 40% · STRENGTH: MEMORY 100%") and a full accuracy breakdown on the profile screen.
+- **Ranks** by level (INTERN → SCRIPT KIDDIE → OPERATOR → NETRUNNER → GHOST → ROOT → OVERLORD → THE GLITCH), **14 achievements** with XP, **8 unlockable themes**.
+- Daily Breach (same seeded run for everyone, one attempt), streaks, share card, synth audio, haptics, reduced-motion support.
+- Portal SDK auto-detection (CrazyGames v3 / Poki) with gameplay events, midgame ads with the 3-minute cooldown respected, rewarded ads, AdBlock-safe.
 
 ## What's in the box
 
 ```
-dist/index.html      the whole game, one file (~50 KB). Upload this anywhere.
+dist/index.html      the whole game, one file (~70 KB). Upload this anywhere.
+covers/              CrazyGames cover images (1920×1080, 800×1200, 800×800), 512 icon, tagline variants for social
 dist/artifact.html   same game without the document wrapper (used for the claude.ai preview)
 src/                 editable source (index.src.html, style.css, core.js, games.js)
 build.js             node build.js  -> rebuilds dist/ from src/
 worker/              free Cloudflare Worker for the daily leaderboard
 test/play.py         headless play-test bot (python3 test/play.py)
+test/covers.py       re-renders the cover images (python3 test/covers.py)
 ```
 
 ## Step 1 — host your own copy (10 minutes, free)
@@ -34,29 +49,32 @@ Put that URL into `CONFIG.BACKEND_URL` in `src/core.js`, rebuild, redeploy the p
 
 Anti-cheat is deliberately light (score cap, plausibility check, 3 submits per IP per day). It's enough for a launch; if the board gets abused later, add a signed session token.
 
-## Step 3 — submit to portals (this is where the money is)
+## Step 3 — submit to CrazyGames (the money step)
 
-Portals monetize with ads and share revenue with you. You need: the game, a title, a description, screenshots, and a cover image.
+CrazyGames monetizes with ads and shares revenue. You need a hosted URL first (Step 1) — they accept an HTML5 upload too, but a URL lets you push fixes without resubmitting.
 
-**CrazyGames** (developer.crazygames.com) — upload `dist/index.html` as an HTML5 game. Their SDK is already wired in: it loads automatically when the game is served from a crazygames domain or with `?portal=crazygames` in the URL. Ad breaks play every 3rd game over (`CONFIG.ADS_EVERY_N_RUNS`); `gameplayStart/Stop` and `happytime` are called at the right moments. Cover art: 512×512 and 1920×1080 PNG (see below). Fill in the form, pick "Casual / Skill / Arcade" tags. Review usually takes a few days; they approve into "Basic" first, then promote based on player retention, so the daily loop matters.
+1. **Account**: go to developer.crazygames.com and sign up as a developer (free). Fill in the payout profile when it asks (PayPal or bank; India is supported).
+2. **New game → HTML5**. Choose "Upload" and drop `dist/index.html`, or choose "Iframe / URL" and paste your hosted URL. Orientation: **portrait**, also works landscape. Mark it **mobile-friendly** (it is).
+3. **Details**: Title `OVERRIDE`. Category: Casual / Skill / Arcade. Tags: reaction, brain, arcade, quick, one-tap. Description (paste): *"A rogue AI is testing your reflexes — and it lies. Survive an endless run of 2-second challenges that get faster every node: tap the lit cell, stop the bar, repeat the sequence, disobey the AI when it's bluffing. Beat the FIREWALL every 10 nodes to restore integrity, earn patches to bend the rules, and take on the Daily Breach: the same seeded run for every player on Earth."* Controls: *"Tap / click. Swipe or arrow keys for direction rounds. 1/2/3 to use patches."*
+4. **Covers**: upload the three files from `covers/` (landscape, portrait, square). They're title-only, which is what their guidelines require.
+5. **SDK**: it's already integrated. In the "SDK" section tick that you use gameplay events, midgame ads and rewarded ads. Their QA tool (Developer Portal → your game → QA) checks these automatically; run it and it should pass.
+6. **Preview & test**: use their preview link (crazygames.com/preview) — the SDK reports `environment: "crazygames"` there and ads run in test mode. Play a full run, die, press REBOOT, confirm the rewarded ad plays and the run continues.
+7. **Submit**. Review takes a few days. You land in **Basic launch** first (no monetization yet); they promote to **Full launch** based on playtime and return rate. The daily run and streaks exist to push those numbers.
 
-**Poki** (developers.poki.com) — same file, same SDK auto-detection (`?portal=poki`). Poki is curated and takes longer; apply with your CrazyGames stats once you have a week of data.
+Local testing tip: open the game with `?portal=crazygames` — the SDK loads and logs; ads won't fill off their domain, which is expected. Without the SDK, REBOOT is simply free.
 
-**GameDistribution** (gamedistribution.com) — same upload, syndicates to hundreds of sites. Lowest effort, extra reach.
-
-**itch.io** — zip `dist/index.html` as `index.html` inside a folder, upload as an HTML game, set viewport 520×860 and enable mobile. No ad revenue, but it's a free landing page and Gen Z finds things there.
-
-To test the portal path locally, open the game with `?portal=crazygames` — the SDK loads from their CDN and logs to the console; ads won't fill outside their domain, which is expected.
+**Also submit the same file to** GameDistribution (syndication to hundreds of sites, lowest effort) and itch.io (free landing page). Hold Poki until you have a week of CrazyGames data — they're curated and like to see numbers.
 
 ## Cover art & screenshots
 
-Run `python3 test/play.py` — it plays the game headlessly and drops `test/mobile_*.png` and `test/desktop_*.png` screenshots you can crop for the store listing. For the 512×512 icon, the favicon SVG in `index.html` (cyan ring, magenta core on black) scales cleanly; export it from any vector tool.
+Covers are in `covers/` already. Run `python3 test/play.py` for gameplay screenshots (`test/mobile_*.png`, `test/desktop_*.png`) — CrazyGames asks for a few; pick the game screen, a FIREWALL, and the game-over screen. `python3 test/covers.py` re-renders the covers if you change the name or colours.
 
 ## Tuning knobs (all in `src/games.js`)
 
 - `speedFactor(n)` — how fast rounds shrink (currently 1.8% per node, floor 42%)
 - `tier(n)` — when grids grow and zones shrink
-- `isLieNode(n)` — from node 6, chance the AI lies (12% → 35%)
+- `isLieNode(n)` — from node 3, chance the AI lies (18% → 40%)
+- FIREWALL cadence (`n%10===0`), patch cadence (`combo%8===0`), reboot condition (`nodes>=3`) — all in `games.js`
 - `GAMES[x].base` — base milliseconds per challenge type
 - XP: `gained = score/30 + nodes*4`; theme unlock levels in `core.js` THEMES
 

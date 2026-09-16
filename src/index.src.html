@@ -6,7 +6,7 @@
 <meta name="description" content="OVERRIDE — you vs. a rogue AI. Endless rapid-fire challenges that get faster the longer you survive. Beat the daily run, climb the global board.">
 <meta name="theme-color" content="#05060a">
 <meta property="og:title" content="OVERRIDE — beat the rogue AI">
-<meta property="og:description" content="Rapid-fire challenges. 3 integrity points. How long can you last?">
+<meta property="og:description" content="Rapid-fire challenges. The AI lies. 3 integrity points. How long can you last?">
 <title>OVERRIDE</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305060a'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%2300f0ff' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23ff2bd6'/%3E%3C/svg%3E">
 <style>
@@ -23,11 +23,12 @@
     <div class="hud-top">
       <button class="icon-btn" id="btn-sound" title="Sound">🔊</button>
       <div class="pill" id="home-level">LVL 1</div>
-      <button class="icon-btn" id="btn-themes" title="Themes">◐</button>
+      <button class="icon-btn" id="btn-profile" title="Profile">◐</button>
     </div>
     <div class="home-body">
       <div class="eyebrow">// SYSTEM STATUS: HOSTILE</div>
       <h1 class="logo"><span>OVER</span><span class="alt">RIDE</span></h1>
+      <div class="rank-title" id="rank-title">RANK: INTERN</div>
       <p class="ai-line" id="home-taunt">A rogue AI has locked you out. It thinks you're slow.</p>
       <div class="stat-row">
         <div class="stat"><b id="s-best">0</b><span>best</span></div>
@@ -51,9 +52,9 @@
       <div class="pill" id="node">NODE 1</div>
     </div>
     <div class="timer"><div id="timer-bar"></div></div>
-    <div class="ai-bar" id="ai-bar"><span class="ai-tag">AI</span><span id="ai-msg">…</span></div>
+    <div class="ai-bar" id="ai-bar"><span class="ai-tag">AI</span><span id="ai-msg">…</span><div class="patch-row" id="patches"></div></div>
     <div class="instr" id="instr"></div>
-    <div class="arena" id="arena"></div>
+    <div class="arena" id="arena"><div class="overlay" id="overlay"></div></div>
   </section>
 
   <!-- GAME OVER -->
@@ -69,7 +70,9 @@
         <div><b id="o-xp">+0</b><span>xp</span></div>
       </div>
       <div class="xp-track"><div id="xp-fill"></div><span id="xp-label"></span></div>
+      <div id="weakness" class="weak"></div>
       <div id="unlock-note" class="unlock"></div>
+      <button class="cta warn hidden" id="btn-reboot">REBOOT <small id="reboot-sub">watch an ad · +1 integrity · continue</small></button>
       <div id="daily-submit" class="submit hidden">
         <input id="name-input" maxlength="12" placeholder="your tag" autocomplete="off" spellcheck="false">
         <button id="btn-submit" class="ghost small">SUBMIT TO BOARD</button>
@@ -97,14 +100,32 @@
     </div>
   </section>
 
-  <!-- THEMES -->
-  <section id="themes" class="screen">
+  <!-- PROFILE -->
+  <section id="profile" class="screen">
     <div class="hud-top">
-      <button class="icon-btn" id="btn-themes-back">←</button>
-      <div class="pill">THEMES</div>
+      <button class="icon-btn" id="btn-profile-back">←</button>
+      <div class="pill">PROFILE</div>
       <span class="icon-btn"></span>
     </div>
-    <div class="theme-grid" id="theme-grid"></div>
+    <div class="profile-body">
+      <div class="prof-head">
+        <div class="prof-rank" id="prof-rank">INTERN</div>
+        <div class="prof-sub" id="prof-sub">LVL 1 · next rank at LVL 3</div>
+        <div class="xp-track"><div id="prof-xp-fill"></div></div>
+      </div>
+      <div class="stat-row prof-stats">
+        <div class="stat"><b id="p-best">0</b><span>best</span></div>
+        <div class="stat"><b id="p-nodes">0</b><span>deepest</span></div>
+        <div class="stat"><b id="p-combo">0</b><span>combo</span></div>
+        <div class="stat"><b id="p-lies">0</b><span>lies caught</span></div>
+      </div>
+      <div class="eyebrow sect">// ACCURACY BY CHALLENGE</div>
+      <div class="acc-list" id="acc-list"></div>
+      <div class="eyebrow sect">// ACHIEVEMENTS <span id="ach-count"></span></div>
+      <div class="ach-list" id="ach-list"></div>
+      <div class="eyebrow sect">// THEMES</div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
   </section>
 
 </div>

@@ -4,7 +4,7 @@ const CONFIG = {
   BACKEND_URL: '',            // e.g. 'https://override-board.yourname.workers.dev' (set after deploying worker/)
   SHARE_URL: location.origin + location.pathname,
   ADS_EVERY_N_RUNS: 3,        // portal ad break frequency at game over
-  VERSION: '1.0.0'
+  VERSION: '1.1.0'
 };
 
 /* ===================== UTIL ===================== */
@@ -19,7 +19,7 @@ const fmt = n => n.toLocaleString('en-US');
 
 /* ===================== STORAGE ===================== */
 const SAVE_KEY='override.save.v1';
-const DEFAULT_SAVE = { best:0, runs:0, xp:0, level:1, theme:'neon', sound:true, dayStreak:0, lastDay:'', daily:{}, tag:'', maxCombo:0, unlocked:['neon'] };
+const DEFAULT_SAVE = { best:0, runs:0, xp:0, level:1, theme:'neon', sound:true, dayStreak:0, lastDay:'', daily:{}, tag:'', maxCombo:0, unlocked:['neon'], bestNodes:0, liesCaught:0, typeStats:{}, ach:[], totalNodes:0, patchesUsed:0, firewalls:0 };
 let save = loadSave();
 function loadSave(){ try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); return Object.assign({},DEFAULT_SAVE,s||{}); }catch(e){ return Object.assign({},DEFAULT_SAVE);} }
 function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
@@ -41,6 +41,28 @@ function applyTheme(id){
   r.setProperty('--a',t.a); r.setProperty('--b',t.b); r.setProperty('--bg',t.bg);
   document.querySelector('meta[name=theme-color]').setAttribute('content',t.bg);
 }
+
+/* ===================== RANKS & ACHIEVEMENTS ===================== */
+const RANKS=[[1,'INTERN'],[3,'SCRIPT KIDDIE'],[5,'OPERATOR'],[8,'NETRUNNER'],[12,'GHOST'],[16,'ROOT'],[20,'OVERLORD'],[25,'THE GLITCH']];
+function rankFor(level){ let r=RANKS[0]; for(const x of RANKS){ if(level>=x[0]) r=x; } return r; }
+function nextRank(level){ return RANKS.find(x=>x[0]>level)||null; }
+const ACH=[
+  {id:'first',   name:'BOOTED',        desc:'finish your first run',            xp:50,  test:s=>s.runs>=1},
+  {id:'n10',     name:'DEEP DIVE',     desc:'reach node 10',                    xp:100, test:s=>s.bestNodes>=10},
+  {id:'n25',     name:'KERNEL ACCESS', desc:'reach node 25',                    xp:250, test:s=>s.bestNodes>=25},
+  {id:'n50',     name:'ROOT ACCESS',   desc:'reach node 50',                    xp:600, test:s=>s.bestNodes>=50},
+  {id:'combo10', name:'ON FIRE',       desc:'10 combo',                         xp:100, test:s=>s.maxCombo>=10},
+  {id:'combo25', name:'UNSTOPPABLE',   desc:'25 combo',                         xp:300, test:s=>s.maxCombo>=25},
+  {id:'lies10',  name:'LIE DETECTOR',  desc:'catch the AI lying 10 times',      xp:150, test:s=>s.liesCaught>=10},
+  {id:'lies50',  name:'TRUST NOBODY',  desc:'catch the AI lying 50 times',      xp:400, test:s=>s.liesCaught>=50},
+  {id:'fw',      name:'BREACHED',      desc:'clear a FIREWALL',                 xp:150, test:s=>s.firewalls>=1},
+  {id:'streak3', name:'HABIT',         desc:'3-day streak',                     xp:150, test:s=>s.dayStreak>=3},
+  {id:'streak7', name:'ADDICTED',      desc:'7-day streak',                     xp:400, test:s=>s.dayStreak>=7},
+  {id:'patch',   name:'PATCHED',       desc:'use 5 patches',                    xp:100, test:s=>s.patchesUsed>=5},
+  {id:'k5',      name:'5K CLUB',       desc:'score 5,000 in one run',           xp:200, test:s=>s.best>=5000},
+  {id:'k20',     name:'20K CLUB',      desc:'score 20,000 in one run',          xp:500, test:s=>s.best>=20000},
+];
+function checkAchievements(){ const got=[]; for(const a of ACH){ if(!save.ach.includes(a.id) && a.test(save)){ save.ach.push(a.id); got.push(a);} } return got; }
 
 /* ===================== PROGRESSION ===================== */
 const xpForLevel = l => Math.round(200*Math.pow(l,1.4));
@@ -114,27 +136,47 @@ const Portal = (()=>{
   const q = new URLSearchParams(location.search).get('portal');
   const host = location.hostname;
   const kind = q || (host.includes('crazygames')?'crazygames': host.includes('poki')?'poki':'none');
-  let sdk=null, ready=false;
+  let sdk=null, ready=false, lastMidgame=0;
   function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
   async function init(){
     try{
-      if(kind==='crazygames'){ await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js'); await window.CrazyGames.SDK.init(); sdk=window.CrazyGames.SDK; ready=true; }
-      else if(kind==='poki'){ await loadScript('https://game-cdn.poki.com/scripts/v2/poki-sdk.js'); await window.PokiSDK.init(); sdk=window.PokiSDK; ready=true; sdk.gameLoadingFinished(); }
+      if(kind==='crazygames'){
+        await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js');
+        await window.CrazyGames.SDK.init(); sdk=window.CrazyGames.SDK;
+        ready = sdk.environment!=='disabled';
+        if(ready){ try{ sdk.game.loadingStart(); sdk.game.loadingStop(); }catch(e){} }
+      } else if(kind==='poki'){
+        await loadScript('https://game-cdn.poki.com/scripts/v2/poki-sdk.js');
+        await window.PokiSDK.init(); sdk=window.PokiSDK; ready=true; sdk.gameLoadingFinished();
+      }
     }catch(e){ ready=false; }
   }
+  function pauseForAd(){ Audio.setAdMuted(true); }
+  function resumeAfterAd(){ Audio.setAdMuted(false); }
   return {
-    kind, init,
+    kind, init, isReady:()=>ready,
     gameplayStart(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStart() : sdk.gameplayStart(); }catch(e){} },
     gameplayStop(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStop() : sdk.gameplayStop(); }catch(e){} },
     happytime(){ try{ if(!ready) return; if(kind==='crazygames') sdk.game.happytime(); }catch(e){} },
+    /* midgame ad at a natural pause; respects the 3-minute cooldown CrazyGames enforces */
     async adBreak(){
-      if(!ready) return;
-      Audio.setAdMuted(true);
+      if(!ready) return; if(Date.now()-lastMidgame<180000) return; lastMidgame=Date.now();
+      pauseForAd();
       try{
-        if(kind==='crazygames'){ await new Promise(res=>sdk.ad.requestAd('midgame',{adFinished:res,adError:res,adStarted:()=>{}})); }
-        else { await sdk.commercialBreak(()=>{}); }
+        if(kind==='crazygames'){ await new Promise(res=>sdk.ad.requestAd('midgame',{adStarted:pauseForAd,adFinished:res,adError:res})); }
+        else { await sdk.commercialBreak(pauseForAd); }
       }catch(e){}
-      Audio.setAdMuted(false);
+      resumeAfterAd();
+    },
+    /* rewarded ad; resolves true only when the player actually watched it. Off-portal: free (so the feature is testable). */
+    async rewarded(){
+      if(!ready) return {ok:true,free:true};
+      pauseForAd(); let ok=false;
+      try{
+        if(kind==='crazygames'){ ok = await new Promise(res=>sdk.ad.requestAd('rewarded',{adStarted:pauseForAd,adFinished:()=>res(true),adError:()=>res(false)})); }
+        else { ok = await sdk.rewardedBreak(pauseForAd); }
+      }catch(e){ ok=false; }
+      resumeAfterAd(); return {ok,free:false};
     }
   };
 })();

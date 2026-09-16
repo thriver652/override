@@ -130,3 +130,43 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
 .shake{animation:shake .3s}
 @keyframes shake{0%,100%{transform:none}20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(4px,-1px)}}
 @media (min-width:700px){.arena{margin:18px 0}.instr{font-size:30px}}
+
+/* ===== v1.1 additions ===== */
+.rank-title{font:700 12px var(--mono);letter-spacing:.2em;color:var(--warn);text-transform:uppercase}
+.ai-bar{position:relative}
+.patch-row{margin-left:auto;display:flex;gap:6px}
+.patch{padding:5px 9px;border-radius:8px;border:1px solid var(--warn);background:color-mix(in oklab,var(--warn) 14%,transparent);color:var(--warn);font:800 11px var(--mono);letter-spacing:.08em;cursor:pointer;animation:pop .3s}
+.patch.active{background:var(--warn);color:#1a1200}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:3;font:900 clamp(40px,13vw,72px)/1 var(--font);letter-spacing:-.03em;text-align:center;opacity:0}
+.overlay.show{animation:ov .9s ease-out}
+.overlay.lie{color:var(--b);text-shadow:0 0 30px var(--b)}
+.overlay.boss{color:var(--bad);text-shadow:0 0 30px var(--bad)}
+.overlay.good{color:var(--ok);text-shadow:0 0 30px var(--ok)}
+.overlay.warn{color:var(--warn);text-shadow:0 0 30px var(--warn)}
+@keyframes ov{0%{opacity:0;transform:scale(.6) rotate(-4deg)}15%{opacity:1;transform:scale(1.08) rotate(1deg)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+.arena.boss{border-color:var(--bad);box-shadow:inset 0 0 40px color-mix(in oklab,var(--bad) 25%,transparent)}
+#timer-bar.boss{background:linear-gradient(90deg,var(--bad),var(--warn));box-shadow:0 0 12px var(--bad)}
+.cta.warn{color:#1a1200;background:linear-gradient(120deg,var(--warn),color-mix(in oklab,var(--warn) 60%,white));box-shadow:0 0 0 1px color-mix(in oklab,var(--warn) 50%,transparent),0 10px 40px -10px color-mix(in oklab,var(--warn) 70%,transparent)}
+.weak{font:700 12px var(--mono);letter-spacing:.12em;color:var(--dim);min-height:1.2em}
+.weak b{color:var(--bad)} .weak i{color:var(--ok);font-style:normal}
+.profile-body{flex:1;overflow:auto;padding:16px 2px 24px;display:flex;flex-direction:column;gap:14px}
+.prof-head{text-align:center;display:flex;flex-direction:column;gap:8px}
+.prof-rank{font:900 clamp(36px,10vw,52px)/1 var(--font);letter-spacing:-.03em;color:var(--warn);text-shadow:0 0 24px color-mix(in oklab,var(--warn) 50%,transparent)}
+.prof-sub{font:600 11px var(--mono);letter-spacing:.14em;color:var(--dim)}
+.prof-head .xp-track{margin:6px 40px}
+#prof-xp-fill{height:100%;background:linear-gradient(90deg,var(--warn),var(--b))}
+.prof-stats{gap:18px;flex-wrap:wrap}
+.sect{margin-top:6px}
+.acc-list{display:flex;flex-direction:column;gap:6px}
+.acc{display:grid;grid-template-columns:90px 1fr 44px;align-items:center;gap:10px;font:700 11px var(--mono);letter-spacing:.1em}
+.acc .bar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.acc .bar i{display:block;height:100%;background:var(--a)} .acc.weak-row .bar i{background:var(--bad)}
+.acc .pct{text-align:right;color:var(--dim)}
+.ach-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.ach{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:3px}
+.ach b{font-size:13px} .ach span{font:600 10px var(--mono);color:var(--dim);letter-spacing:.06em}
+.ach.done{border-color:var(--warn);background:color-mix(in oklab,var(--warn) 8%,transparent)} .ach.done b::before{content:"★ ";color:var(--warn)}
+.ach:not(.done){opacity:.55}
+.node-pb{font-size:10px;opacity:.7;margin-left:6px}
+@media (prefers-reduced-motion:reduce){.shake,.overlay.show,.patch{animation:none}}

@@ -6,7 +6,7 @@
 <meta name="description" content="OVERRIDE — you vs. a rogue AI. Endless rapid-fire challenges that get faster the longer you survive. Beat the daily run, climb the global board.">
 <meta name="theme-color" content="#05060a">
 <meta property="og:title" content="OVERRIDE — beat the rogue AI">
-<meta property="og:description" content="Rapid-fire challenges. 3 integrity points. How long can you last?">
+<meta property="og:description" content="Rapid-fire challenges. The AI lies. 3 integrity points. How long can you last?">
 <title>OVERRIDE</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305060a'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%2300f0ff' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23ff2bd6'/%3E%3C/svg%3E">
 <style>
@@ -143,6 +143,46 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
 @keyframes shake{0%,100%{transform:none}20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(4px,-1px)}}
 @media (min-width:700px){.arena{margin:18px 0}.instr{font-size:30px}}
 
+/* ===== v1.1 additions ===== */
+.rank-title{font:700 12px var(--mono);letter-spacing:.2em;color:var(--warn);text-transform:uppercase}
+.ai-bar{position:relative}
+.patch-row{margin-left:auto;display:flex;gap:6px}
+.patch{padding:5px 9px;border-radius:8px;border:1px solid var(--warn);background:color-mix(in oklab,var(--warn) 14%,transparent);color:var(--warn);font:800 11px var(--mono);letter-spacing:.08em;cursor:pointer;animation:pop .3s}
+.patch.active{background:var(--warn);color:#1a1200}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:3;font:900 clamp(40px,13vw,72px)/1 var(--font);letter-spacing:-.03em;text-align:center;opacity:0}
+.overlay.show{animation:ov .9s ease-out}
+.overlay.lie{color:var(--b);text-shadow:0 0 30px var(--b)}
+.overlay.boss{color:var(--bad);text-shadow:0 0 30px var(--bad)}
+.overlay.good{color:var(--ok);text-shadow:0 0 30px var(--ok)}
+.overlay.warn{color:var(--warn);text-shadow:0 0 30px var(--warn)}
+@keyframes ov{0%{opacity:0;transform:scale(.6) rotate(-4deg)}15%{opacity:1;transform:scale(1.08) rotate(1deg)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+.arena.boss{border-color:var(--bad);box-shadow:inset 0 0 40px color-mix(in oklab,var(--bad) 25%,transparent)}
+#timer-bar.boss{background:linear-gradient(90deg,var(--bad),var(--warn));box-shadow:0 0 12px var(--bad)}
+.cta.warn{color:#1a1200;background:linear-gradient(120deg,var(--warn),color-mix(in oklab,var(--warn) 60%,white));box-shadow:0 0 0 1px color-mix(in oklab,var(--warn) 50%,transparent),0 10px 40px -10px color-mix(in oklab,var(--warn) 70%,transparent)}
+.weak{font:700 12px var(--mono);letter-spacing:.12em;color:var(--dim);min-height:1.2em}
+.weak b{color:var(--bad)} .weak i{color:var(--ok);font-style:normal}
+.profile-body{flex:1;overflow:auto;padding:16px 2px 24px;display:flex;flex-direction:column;gap:14px}
+.prof-head{text-align:center;display:flex;flex-direction:column;gap:8px}
+.prof-rank{font:900 clamp(36px,10vw,52px)/1 var(--font);letter-spacing:-.03em;color:var(--warn);text-shadow:0 0 24px color-mix(in oklab,var(--warn) 50%,transparent)}
+.prof-sub{font:600 11px var(--mono);letter-spacing:.14em;color:var(--dim)}
+.prof-head .xp-track{margin:6px 40px}
+#prof-xp-fill{height:100%;background:linear-gradient(90deg,var(--warn),var(--b))}
+.prof-stats{gap:18px;flex-wrap:wrap}
+.sect{margin-top:6px}
+.acc-list{display:flex;flex-direction:column;gap:6px}
+.acc{display:grid;grid-template-columns:90px 1fr 44px;align-items:center;gap:10px;font:700 11px var(--mono);letter-spacing:.1em}
+.acc .bar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.acc .bar i{display:block;height:100%;background:var(--a)} .acc.weak-row .bar i{background:var(--bad)}
+.acc .pct{text-align:right;color:var(--dim)}
+.ach-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.ach{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:3px}
+.ach b{font-size:13px} .ach span{font:600 10px var(--mono);color:var(--dim);letter-spacing:.06em}
+.ach.done{border-color:var(--warn);background:color-mix(in oklab,var(--warn) 8%,transparent)} .ach.done b::before{content:"★ ";color:var(--warn)}
+.ach:not(.done){opacity:.55}
+.node-pb{font-size:10px;opacity:.7;margin-left:6px}
+@media (prefers-reduced-motion:reduce){.shake,.overlay.show,.patch{animation:none}}
+
 </style>
 </head>
 <body>
@@ -155,11 +195,12 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
     <div class="hud-top">
       <button class="icon-btn" id="btn-sound" title="Sound">🔊</button>
       <div class="pill" id="home-level">LVL 1</div>
-      <button class="icon-btn" id="btn-themes" title="Themes">◐</button>
+      <button class="icon-btn" id="btn-profile" title="Profile">◐</button>
     </div>
     <div class="home-body">
       <div class="eyebrow">// SYSTEM STATUS: HOSTILE</div>
       <h1 class="logo"><span>OVER</span><span class="alt">RIDE</span></h1>
+      <div class="rank-title" id="rank-title">RANK: INTERN</div>
       <p class="ai-line" id="home-taunt">A rogue AI has locked you out. It thinks you're slow.</p>
       <div class="stat-row">
         <div class="stat"><b id="s-best">0</b><span>best</span></div>
@@ -183,9 +224,9 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
       <div class="pill" id="node">NODE 1</div>
     </div>
     <div class="timer"><div id="timer-bar"></div></div>
-    <div class="ai-bar" id="ai-bar"><span class="ai-tag">AI</span><span id="ai-msg">…</span></div>
+    <div class="ai-bar" id="ai-bar"><span class="ai-tag">AI</span><span id="ai-msg">…</span><div class="patch-row" id="patches"></div></div>
     <div class="instr" id="instr"></div>
-    <div class="arena" id="arena"></div>
+    <div class="arena" id="arena"><div class="overlay" id="overlay"></div></div>
   </section>
 
   <!-- GAME OVER -->
@@ -201,7 +242,9 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
         <div><b id="o-xp">+0</b><span>xp</span></div>
       </div>
       <div class="xp-track"><div id="xp-fill"></div><span id="xp-label"></span></div>
+      <div id="weakness" class="weak"></div>
       <div id="unlock-note" class="unlock"></div>
+      <button class="cta warn hidden" id="btn-reboot">REBOOT <small id="reboot-sub">watch an ad · +1 integrity · continue</small></button>
       <div id="daily-submit" class="submit hidden">
         <input id="name-input" maxlength="12" placeholder="your tag" autocomplete="off" spellcheck="false">
         <button id="btn-submit" class="ghost small">SUBMIT TO BOARD</button>
@@ -229,14 +272,32 @@ body{background:radial-gradient(1200px 600px at 50% -10%,color-mix(in oklab,var(
     </div>
   </section>
 
-  <!-- THEMES -->
-  <section id="themes" class="screen">
+  <!-- PROFILE -->
+  <section id="profile" class="screen">
     <div class="hud-top">
-      <button class="icon-btn" id="btn-themes-back">←</button>
-      <div class="pill">THEMES</div>
+      <button class="icon-btn" id="btn-profile-back">←</button>
+      <div class="pill">PROFILE</div>
       <span class="icon-btn"></span>
     </div>
-    <div class="theme-grid" id="theme-grid"></div>
+    <div class="profile-body">
+      <div class="prof-head">
+        <div class="prof-rank" id="prof-rank">INTERN</div>
+        <div class="prof-sub" id="prof-sub">LVL 1 · next rank at LVL 3</div>
+        <div class="xp-track"><div id="prof-xp-fill"></div></div>
+      </div>
+      <div class="stat-row prof-stats">
+        <div class="stat"><b id="p-best">0</b><span>best</span></div>
+        <div class="stat"><b id="p-nodes">0</b><span>deepest</span></div>
+        <div class="stat"><b id="p-combo">0</b><span>combo</span></div>
+        <div class="stat"><b id="p-lies">0</b><span>lies caught</span></div>
+      </div>
+      <div class="eyebrow sect">// ACCURACY BY CHALLENGE</div>
+      <div class="acc-list" id="acc-list"></div>
+      <div class="eyebrow sect">// ACHIEVEMENTS <span id="ach-count"></span></div>
+      <div class="ach-list" id="ach-list"></div>
+      <div class="eyebrow sect">// THEMES</div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
   </section>
 
 </div>
@@ -248,7 +309,7 @@ const CONFIG = {
   BACKEND_URL: '',            // e.g. 'https://override-board.yourname.workers.dev' (set after deploying worker/)
   SHARE_URL: location.origin + location.pathname,
   ADS_EVERY_N_RUNS: 3,        // portal ad break frequency at game over
-  VERSION: '1.0.0'
+  VERSION: '1.1.0'
 };
 
 /* ===================== UTIL ===================== */
@@ -263,7 +324,7 @@ const fmt = n => n.toLocaleString('en-US');
 
 /* ===================== STORAGE ===================== */
 const SAVE_KEY='override.save.v1';
-const DEFAULT_SAVE = { best:0, runs:0, xp:0, level:1, theme:'neon', sound:true, dayStreak:0, lastDay:'', daily:{}, tag:'', maxCombo:0, unlocked:['neon'] };
+const DEFAULT_SAVE = { best:0, runs:0, xp:0, level:1, theme:'neon', sound:true, dayStreak:0, lastDay:'', daily:{}, tag:'', maxCombo:0, unlocked:['neon'], bestNodes:0, liesCaught:0, typeStats:{}, ach:[], totalNodes:0, patchesUsed:0, firewalls:0 };
 let save = loadSave();
 function loadSave(){ try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); return Object.assign({},DEFAULT_SAVE,s||{}); }catch(e){ return Object.assign({},DEFAULT_SAVE);} }
 function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
@@ -285,6 +346,28 @@ function applyTheme(id){
   r.setProperty('--a',t.a); r.setProperty('--b',t.b); r.setProperty('--bg',t.bg);
   document.querySelector('meta[name=theme-color]').setAttribute('content',t.bg);
 }
+
+/* ===================== RANKS & ACHIEVEMENTS ===================== */
+const RANKS=[[1,'INTERN'],[3,'SCRIPT KIDDIE'],[5,'OPERATOR'],[8,'NETRUNNER'],[12,'GHOST'],[16,'ROOT'],[20,'OVERLORD'],[25,'THE GLITCH']];
+function rankFor(level){ let r=RANKS[0]; for(const x of RANKS){ if(level>=x[0]) r=x; } return r; }
+function nextRank(level){ return RANKS.find(x=>x[0]>level)||null; }
+const ACH=[
+  {id:'first',   name:'BOOTED',        desc:'finish your first run',            xp:50,  test:s=>s.runs>=1},
+  {id:'n10',     name:'DEEP DIVE',     desc:'reach node 10',                    xp:100, test:s=>s.bestNodes>=10},
+  {id:'n25',     name:'KERNEL ACCESS', desc:'reach node 25',                    xp:250, test:s=>s.bestNodes>=25},
+  {id:'n50',     name:'ROOT ACCESS',   desc:'reach node 50',                    xp:600, test:s=>s.bestNodes>=50},
+  {id:'combo10', name:'ON FIRE',       desc:'10 combo',                         xp:100, test:s=>s.maxCombo>=10},
+  {id:'combo25', name:'UNSTOPPABLE',   desc:'25 combo',                         xp:300, test:s=>s.maxCombo>=25},
+  {id:'lies10',  name:'LIE DETECTOR',  desc:'catch the AI lying 10 times',      xp:150, test:s=>s.liesCaught>=10},
+  {id:'lies50',  name:'TRUST NOBODY',  desc:'catch the AI lying 50 times',      xp:400, test:s=>s.liesCaught>=50},
+  {id:'fw',      name:'BREACHED',      desc:'clear a FIREWALL',                 xp:150, test:s=>s.firewalls>=1},
+  {id:'streak3', name:'HABIT',         desc:'3-day streak',                     xp:150, test:s=>s.dayStreak>=3},
+  {id:'streak7', name:'ADDICTED',      desc:'7-day streak',                     xp:400, test:s=>s.dayStreak>=7},
+  {id:'patch',   name:'PATCHED',       desc:'use 5 patches',                    xp:100, test:s=>s.patchesUsed>=5},
+  {id:'k5',      name:'5K CLUB',       desc:'score 5,000 in one run',           xp:200, test:s=>s.best>=5000},
+  {id:'k20',     name:'20K CLUB',      desc:'score 20,000 in one run',          xp:500, test:s=>s.best>=20000},
+];
+function checkAchievements(){ const got=[]; for(const a of ACH){ if(!save.ach.includes(a.id) && a.test(save)){ save.ach.push(a.id); got.push(a);} } return got; }
 
 /* ===================== PROGRESSION ===================== */
 const xpForLevel = l => Math.round(200*Math.pow(l,1.4));
@@ -358,27 +441,47 @@ const Portal = (()=>{
   const q = new URLSearchParams(location.search).get('portal');
   const host = location.hostname;
   const kind = q || (host.includes('crazygames')?'crazygames': host.includes('poki')?'poki':'none');
-  let sdk=null, ready=false;
+  let sdk=null, ready=false, lastMidgame=0;
   function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
   async function init(){
     try{
-      if(kind==='crazygames'){ await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js'); await window.CrazyGames.SDK.init(); sdk=window.CrazyGames.SDK; ready=true; }
-      else if(kind==='poki'){ await loadScript('https://game-cdn.poki.com/scripts/v2/poki-sdk.js'); await window.PokiSDK.init(); sdk=window.PokiSDK; ready=true; sdk.gameLoadingFinished(); }
+      if(kind==='crazygames'){
+        await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js');
+        await window.CrazyGames.SDK.init(); sdk=window.CrazyGames.SDK;
+        ready = sdk.environment!=='disabled';
+        if(ready){ try{ sdk.game.loadingStart(); sdk.game.loadingStop(); }catch(e){} }
+      } else if(kind==='poki'){
+        await loadScript('https://game-cdn.poki.com/scripts/v2/poki-sdk.js');
+        await window.PokiSDK.init(); sdk=window.PokiSDK; ready=true; sdk.gameLoadingFinished();
+      }
     }catch(e){ ready=false; }
   }
+  function pauseForAd(){ Audio.setAdMuted(true); }
+  function resumeAfterAd(){ Audio.setAdMuted(false); }
   return {
-    kind, init,
+    kind, init, isReady:()=>ready,
     gameplayStart(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStart() : sdk.gameplayStart(); }catch(e){} },
     gameplayStop(){ try{ if(!ready) return; kind==='crazygames'? sdk.game.gameplayStop() : sdk.gameplayStop(); }catch(e){} },
     happytime(){ try{ if(!ready) return; if(kind==='crazygames') sdk.game.happytime(); }catch(e){} },
+    /* midgame ad at a natural pause; respects the 3-minute cooldown CrazyGames enforces */
     async adBreak(){
-      if(!ready) return;
-      Audio.setAdMuted(true);
+      if(!ready) return; if(Date.now()-lastMidgame<180000) return; lastMidgame=Date.now();
+      pauseForAd();
       try{
-        if(kind==='crazygames'){ await new Promise(res=>sdk.ad.requestAd('midgame',{adFinished:res,adError:res,adStarted:()=>{}})); }
-        else { await sdk.commercialBreak(()=>{}); }
+        if(kind==='crazygames'){ await new Promise(res=>sdk.ad.requestAd('midgame',{adStarted:pauseForAd,adFinished:res,adError:res})); }
+        else { await sdk.commercialBreak(pauseForAd); }
       }catch(e){}
-      Audio.setAdMuted(false);
+      resumeAfterAd();
+    },
+    /* rewarded ad; resolves true only when the player actually watched it. Off-portal: free (so the feature is testable). */
+    async rewarded(){
+      if(!ready) return {ok:true,free:true};
+      pauseForAd(); let ok=false;
+      try{
+        if(kind==='crazygames'){ ok = await new Promise(res=>sdk.ad.requestAd('rewarded',{adStarted:pauseForAd,adFinished:()=>res(true),adError:()=>res(false)})); }
+        else { ok = await sdk.rewardedBreak(pauseForAd); }
+      }catch(e){ ok=false; }
+      resumeAfterAd(); return {ok,free:false};
     }
   };
 })();
@@ -391,22 +494,38 @@ const Backend = {
 };
 
 /* ===================== RUN STATE ===================== */
-const Run = { active:false, daily:false, rng:Math.random, score:0, combo:0, maxCombo:0, lives:3, node:0, lastType:null, cleanup:null, timerRaf:0, resolved:false, timerPaused:false, dayKey:'' };
-const arena=$('#arena'), instr=$('#instr'), aiMsg=$('#ai-msg'), timerBar=$('#timer-bar');
+const Run = { active:false, daily:false, rng:Math.random, score:0, combo:0, maxCombo:0, lives:3, node:0, lastType:null, cleanup:null, timerRaf:0, resolved:false, timerPaused:false, dayKey:'',
+  patches:[], slowLeft:0, scanLeft:0, shield:false, boss:null, rebooted:false, xpGranted:0, typeStats:{}, lies:0, pbShown:false, lastPatchCombo:0 };
+const arena=$('#arena'), instr=$('#instr'), aiMsg=$('#ai-msg'), timerBar=$('#timer-bar'), overlay=$('#overlay');
 
 function speedFactor(n){ return clamp(1 - n*0.018, 0.42, 1); }        // duration multiplier
 function tier(n){ return n<4?0 : n<10?1 : n<18?2 : n<30?3 : 4; }        // difficulty tier
 function setInstr(html){ instr.innerHTML=html; }
 function setAi(msg){ aiMsg.textContent=msg; }
-function isLieNode(n){ return n>=6 && Run.rng()<clamp(0.12+n*0.008,0,0.35); }
+function isLieNode(n){ if(Run.scanLeft>0) return false; return n>=3 && Run.rng()<clamp(0.18+n*0.006,0,0.4); }
+function showOverlay(text,cls){ overlay.className='overlay'; void overlay.offsetWidth; overlay.textContent=text; overlay.className='overlay show '+cls; }
 
 const GLYPHS=['◆','●','▲','■','✦','◈','⬢','◉','✚','⌘','∆','Ω','λ','Ψ','Σ','⊕','⊗','⌬'];
 const ODD_PAIRS=[['O','0'],['l','1'],['I','l'],['Z','2'],['S','5'],['B','8'],['◇','◈'],['●','◉'],['▲','∆'],['6','9'],['≡','☰'],['⊕','⊗'],['⬡','⬢'],['C','G'],['M','W'],['◐','◑']];
+const TYPE_NAMES={tap:'TAP',odd:'ODD ONE',bar:'TIMING',seq:'MEMORY',order:'ORDER',arrow:'SWIPE',math:'MATH',stroop:'STROOP',hold:'HOLD',count:'COUNT',react:'REFLEX'};
+
+/* ===================== PATCHES (power-ups) ===================== */
+const PATCHES={ slow:{name:'SLOW-MO',desc:'timer 60% slower · 3 nodes'}, shield:{name:'SHIELD',desc:'absorb one miss'}, scan:{name:'SCAN',desc:'AI cannot lie · 3 nodes'} };
+function grantPatch(){ if(Run.patches.length>=3) return; const id=pick(Object.keys(PATCHES),Run.rng); Run.patches.push(id); renderPatches(); toast('⬢ PATCH: '+PATCHES[id].name+' — tap it to use',1400); Audio.level(); }
+function usePatch(i){ const id=Run.patches[i]; if(!id) return; Run.patches.splice(i,1);
+  if(id==='slow') Run.slowLeft=3; if(id==='scan') Run.scanLeft=3; if(id==='shield') Run.shield=true;
+  save.patchesUsed++; persist(); Audio.ok(); toast(PATCHES[id].name+' ACTIVE',900); renderPatches(); }
+function renderPatches(){ const row=$('#patches'); row.innerHTML='';
+  Run.patches.forEach((id,i)=>{ const b=document.createElement('button'); b.className='patch'; b.textContent=PATCHES[id].name; b.onclick=e=>{ e.stopPropagation(); usePatch(i); }; row.appendChild(b); });
+  if(Run.shield){ const b=document.createElement('span'); b.className='patch active'; b.textContent='SHIELD'; row.appendChild(b); }
+  if(Run.slowLeft>0){ const b=document.createElement('span'); b.className='patch active'; b.textContent='SLOW '+Run.slowLeft; row.appendChild(b); }
+  if(Run.scanLeft>0){ const b=document.createElement('span'); b.className='patch active'; b.textContent='SCAN '+Run.scanLeft; row.appendChild(b); }
+}
 
 /* ===================== MICROGAMES ===================== */
 const GAMES = {
   /* tap the lit cell (lie: tap any unlit) */
-  tap: { base:2200, min:0, setup(ctx){
+  tap: { base:2200, setup(ctx){
     const t=tier(ctx.node), cols=t>=2?4:3, n=cols*cols, lie=ctx.lie;
     setInstr(lie? `<span class="lie">TAP</span> the lit one → tap <span class="hi">ANY OTHER</span>` : `TAP the <span class="hi">LIT</span> one`);
     const g=document.createElement('div'); g.className=`grid c${cols}`; const on=Math.floor(ctx.rng()*n);
@@ -425,7 +544,7 @@ const GAMES = {
   }},
   /* stop the sweeping cursor inside the zone */
   bar: { base:3200, setup(ctx){
-    const t=tier(ctx.node); const zoneW=clamp(0.26-t*0.045,0.09,0.3), zoneX=0.08+ctx.rng()*(0.84-zoneW); const speed=0.9+t*0.35; // sweeps per second
+    const t=tier(ctx.node); const zoneW=clamp(0.26-t*0.045,0.09,0.3), zoneX=0.08+ctx.rng()*(0.84-zoneW); const speed=(0.9+t*0.35)*(Run.slowLeft>0?0.65:1);
     setInstr(`STOP it in the <span class="hi">ZONE</span> — tap`);
     const w=document.createElement('div'); w.className='bar-wrap'; w.innerHTML=`<div class="bar-zone" style="left:${zoneX*100}%;width:${zoneW*100}%"></div><div class="bar-cursor"></div>`;
     const tapAny=document.createElement('div'); tapAny.className='tap-any'; arena.appendChild(w); arena.appendChild(tapAny);
@@ -494,7 +613,7 @@ const GAMES = {
   }},
   /* hold to fill, release at the line */
   hold: { base:3600, setup(ctx){
-    const t=tier(ctx.node); const line=0.35+ctx.rng()*0.5, tol=clamp(0.09-t*0.015,0.035,0.1), rate=0.55+t*0.18; // fill per second
+    const t=tier(ctx.node); const line=0.35+ctx.rng()*0.5, tol=clamp(0.09-t*0.015,0.035,0.1), rate=(0.55+t*0.18)*(Run.slowLeft>0?0.65:1);
     setInstr(`<span class="hi">HOLD</span> to fill · release at the line`);
     const w=document.createElement('div'); w.className='bar-wrap'; w.innerHTML=`<div class="bar-fill"></div><div class="bar-line" style="left:${line*100}%"></div>`;
     const fill=w.querySelector('.bar-fill'); const tapAny=document.createElement('div'); tapAny.className='tap-any'; arena.appendChild(w); arena.appendChild(tapAny);
@@ -505,39 +624,72 @@ const GAMES = {
     tapAny.onpointerup=e=>{ if(!holding) return; holding=false; finish(Math.abs(v-line)<=tol,e); };
     ctx.onCleanup(()=>cancelAnimationFrame(raf));
   }},
+  /* count the target glyphs among distractors */
+  count: { base:3200, setup(ctx){
+    const t=tier(ctx.node); const target=pick(GLYPHS,ctx.rng); let other; do{ other=pick(GLYPHS,ctx.rng); }while(other===target);
+    const n=3+Math.floor(ctx.rng()*(3+t*2)), m=2+Math.floor(ctx.rng()*(3+t*2));
+    setInstr(`how many <span class="hi">${target}</span> ?`);
+    const W=arena.clientWidth, H=arena.clientHeight; const field=document.createElement('div'); field.style.cssText='position:absolute;inset:0';
+    const items=[...Array(n).fill(target),...Array(m).fill(other)].sort(()=>ctx.rng()-0.5);
+    items.forEach(g=>{ const s=document.createElement('span'); s.textContent=g; s.style.cssText=`position:absolute;left:${8+ctx.rng()*(W-48)}px;top:${8+ctx.rng()*(H-120)}px;font:800 ${22+Math.floor(ctx.rng()*12)}px var(--mono);color:${g===target?'var(--a)':'var(--dim)'}`; field.appendChild(s); });
+    arena.appendChild(field);
+    const opts=[n]; while(opts.length<3){ const o=n+pick([-2,-1,1,2],ctx.rng); if(o>0&&!opts.includes(o)) opts.push(o); } opts.sort((a,b)=>a-b);
+    const row=document.createElement('div'); row.className='choice-row'; row.style.cssText='position:absolute;bottom:14px;left:5%;width:90%';
+    opts.forEach(o=>{ const c=document.createElement('button'); c.className='choice'; c.textContent=o; c.onclick=e=>{ const ok=o===n; c.classList.add(ok?'hit':'miss'); ctx.done(ok,e); }; row.appendChild(c); });
+    arena.appendChild(row);
+  }},
+  /* reflex: wait for green, then tap. tapping early fails. */
+  react: { base:1100, setup(ctx){
+    setInstr(`<span class="hi">WAIT</span> for green… then TAP`); ctx.pauseTimer();
+    const tapAny=document.createElement('div'); tapAny.className='tap-any'; tapAny.style.background='color-mix(in oklab,var(--bad) 12%,transparent)'; arena.appendChild(tapAny);
+    const big=document.createElement('div'); big.className='bigword'; big.textContent='HOLD…'; big.style.color='var(--dim)'; arena.appendChild(big);
+    let green=false; const wait=700+ctx.rng()*1600;
+    const to=setTimeout(()=>{ green=true; tapAny.style.background='color-mix(in oklab,var(--ok) 25%,transparent)'; big.textContent='TAP!'; big.style.color='var(--ok)'; setInstr(`<span class="hi">NOW</span>`); Audio.tick(); ctx.resumeTimer(); },wait);
+    tapAny.onpointerdown=e=>{ if(!green){ clearTimeout(to); ctx.resumeTimer(); big.textContent='TOO EARLY'; big.style.color='var(--bad)'; ctx.done(false,e); } else ctx.done(true,e); };
+    ctx.onCleanup(()=>clearTimeout(to));
+  }},
 };
 const GAME_KEYS=Object.keys(GAMES);
-const EARLY=['tap','odd','math','arrow'];
+const EARLY=['tap','odd','math','arrow','react'];
+const LIE_TYPES=['tap','order','arrow','stroop'];
 
 /* ===================== RUN LOOP ===================== */
 function startRun(daily){
   Audio.ensure();
-  Object.assign(Run,{active:true,daily,score:0,combo:0,maxCombo:0,lives:3,node:0,lastType:null,resolved:false,dayKey:todayKey()});
+  Object.assign(Run,{active:true,daily,score:0,combo:0,maxCombo:0,lives:3,node:0,lastType:null,resolved:false,dayKey:todayKey(),
+    patches:[],slowLeft:0,scanLeft:0,shield:false,boss:null,rebooted:false,xpGranted:0,typeStats:{},lies:0,pbShown:false,lastPatchCombo:0});
   Run.rng = daily ? mulberry32(hashStr('override:'+Run.dayKey)) : Math.random;
-  $$('#integrity i').forEach(i=>i.classList.remove('off'));
+  $$('#integrity i').forEach(i=>i.classList.remove('off')); renderPatches();
   updateHud(); show('game'); Portal.gameplayStart();
   countdown().then(nextNode);
 }
-async function countdown(){
-  clearArena(); setInstr(''); setAi(pick(Run.daily?AI.daily:AI.start));
+async function countdown(msg){
+  clearArena(); setInstr(''); setAi(msg||pick(Run.daily?AI.daily:AI.start));
   for(const n of ['3','2','1','GO']){ clearArena(); const c=document.createElement('div'); c.className='count'; c.textContent=n; arena.appendChild(c); n==='GO'?Audio.go():Audio.tick(); await sleep(n==='GO'?350:500); }
 }
-function clearArena(){ if(Run.cleanup){ Run.cleanup.forEach(f=>{try{f()}catch(e){}}); } Run.cleanup=[]; arena.innerHTML=''; arena.onpointerdown=null; arena.onpointerup=null; cancelAnimationFrame(Run.timerRaf); }
-function updateHud(){ $('#score').textContent=fmt(Run.score); $('#node').textContent='NODE '+(Run.node||1); const mult=comboMult(); $('#combo').textContent= Run.combo>=3? `${Run.combo} COMBO ×${mult.toFixed(1)}`:''; }
+function clearArena(){ if(Run.cleanup){ Run.cleanup.forEach(f=>{try{f()}catch(e){}}); } Run.cleanup=[]; Array.from(arena.children).forEach(c=>{ if(c!==overlay) c.remove(); }); arena.onpointerdown=null; arena.onpointerup=null; cancelAnimationFrame(Run.timerRaf); }
+function updateHud(){ $('#score').textContent=fmt(Run.score); const pb=save.bestNodes; $('#node').innerHTML='NODE '+(Run.node||1)+(pb?`<span class="node-pb">PB ${pb}</span>`:''); const mult=comboMult(); $('#combo').textContent= Run.boss? `FIREWALL ${Run.boss.step}/3` : Run.combo>=3? `${Run.combo} COMBO ×${mult.toFixed(1)}`:''; }
 function comboMult(){ return 1 + Math.floor(Run.combo/5)*0.5; }
+function setLives(n){ Run.lives=clamp(n,0,3); $$('#integrity i').forEach((el,i)=>el.classList.toggle('off',i>=Run.lives)); }
 
 function nextNode(){
   if(!Run.active) return;
   Run.node++; Run.resolved=false; clearArena();
   const n=Run.node;
+  // FIREWALL boss: nodes 10, 20, 30… start a 3-step gauntlet
+  if(n%10===0 && !Run.boss){ Run.boss={step:0,failed:false}; showOverlay('FIREWALL','boss'); setAi('Firewall engaged. Three in a row or nothing.'); Audio.bad(); }
+  if(Run.boss){ Run.boss.step++; arena.classList.add('boss'); timerBar.classList.add('boss'); } else { arena.classList.remove('boss'); timerBar.classList.remove('boss'); }
+  // personal best distance
+  if(!Run.pbShown && save.bestNodes>0 && n>save.bestNodes){ Run.pbShown=true; showOverlay('NEW BEST','good'); Audio.level(); Portal.happytime(); }
   let key; do{ key = n<=3 ? pick(EARLY,Run.rng) : pick(GAME_KEYS,Run.rng); }while(key===Run.lastType);
   Run.lastType=key;
-  const lie = ['tap','order','arrow','stroop'].includes(key) && isLieNode(n);
-  if(n>1 && n%5===0){ setAi(pick(AI.speed,Run.rng)); toast('⚡ SPEED UP',700); } else if(lie && Run.rng()<0.6){ setAi(pick(AI.lie,Run.rng)); }
-  updateHud();
-  const g=GAMES[key]; const dur=g.base*speedFactor(n);
+  const lie = LIE_TYPES.includes(key) && isLieNode(n);
+  if(n>1 && n%5===0 && !Run.boss){ setAi(pick(AI.speed,Run.rng)); toast('⚡ SPEED UP',700); } else if(lie && Run.rng()<0.6){ setAi(pick(AI.lie,Run.rng)); }
+  updateHud(); renderPatches();
+  const g=GAMES[key]; let dur=g.base*speedFactor(n); if(Run.slowLeft>0) dur*=1.6; if(Run.boss) dur*=0.85;
   let t0=performance.now(); Run.timerPaused=false;
-  const ctx={ node:n, rng:Run.rng, lie, onCleanup(f){Run.cleanup.push(f);}, done:(ok,e)=>resolve(ok,e), pauseTimer(){Run.timerPaused=true;}, resumeTimer(){Run.timerPaused=false; t0=performance.now(); } };
+  const ctx={ node:n, rng:Run.rng, lie, key, onCleanup(f){Run.cleanup.push(f);}, done:(ok,e)=>resolve(ok,e), pauseTimer(){Run.timerPaused=true;}, resumeTimer(){Run.timerPaused=false; t0=performance.now(); } };
+  Run._ctx=ctx;
   g.setup(ctx);
   let ticked=false;
   (function tick(){ if(Run.resolved||!Run.active) return; if(Run.timerPaused){ timerBar.style.transform='scaleX(1)'; Run.timerRaf=requestAnimationFrame(tick); return; }
@@ -549,55 +701,92 @@ function nextNode(){
 function resolve(ok,e,timeout){
   if(Run.resolved||!Run.active) return; Run.resolved=true; Run.timerPaused=false;
   cancelAnimationFrame(Run.timerRaf); (Run.cleanup||[]).forEach(f=>{try{f()}catch(_){}}); Run.cleanup=[];
-  const left = timeout?0: clamp(1-(performance.now()-Run._t0())/Run._dur,0,1);
+  const ctx=Run._ctx||{}; const left = timeout?0: clamp(1-(performance.now()-Run._t0())/Run._dur,0,1);
   const px = e&&e.clientX? e.clientX : innerWidth/2, py = e&&e.clientY? e.clientY : innerHeight/2;
+  const st=Run.typeStats[ctx.key]||(Run.typeStats[ctx.key]={n:0,f:0}); st.n++;
+  if(Run.slowLeft>0) Run.slowLeft--; if(Run.scanLeft>0) Run.scanLeft--;
+  if(!ok && Run.shield){ Run.shield=false; ok=true; showOverlay('SHIELDED','warn'); Audio.ok(); }
+  else if(ctx.lie){ showOverlay(ok?'CAUGHT IT':'IT LIED','lie'); if(ok){ Run.lies++; } }
   if(ok){
     Run.combo++; Run.maxCombo=Math.max(Run.maxCombo,Run.combo);
-    const pts=Math.round((100 + left*100) * comboMult() * (1+Run.node*0.03));
+    const pts=Math.round((100 + left*100) * comboMult() * (1+Run.node*0.03) * (Run.boss?1.5:1));
     Run.score+=pts; arena.classList.remove('flash-ok'); void arena.offsetWidth; arena.classList.add('flash-ok');
     Run.combo>=3? Audio.combo(Run.combo): Audio.ok(); FX.burst(px,py,FX.cssVar('--a'),14+Math.min(Run.combo,20));
-    if(Run.node%3===0) setAi(pick(AI.ok,Run.rng));
+    if(Run.node%3===0 && !ctx.lie) setAi(pick(AI.ok,Run.rng));
     floatText('+'+pts, px, py);
+    if(Run.combo>0 && Run.combo%8===0 && Run.combo!==Run.lastPatchCombo){ Run.lastPatchCombo=Run.combo; grantPatch(); }
   } else {
-    Run.combo=0; Run.lives--; $$('#integrity i')[Run.lives]?.classList.add('off');
-    arena.classList.remove('flash-bad'); void arena.offsetWidth; arena.classList.add('flash-bad'); FX.shake(); Audio.bad(); FX.burst(px,py,FX.cssVar('--bad'),24,8);
+    st.f++; Run.combo=0; setLives(Run.lives-1); if(Run.boss) Run.boss.failed=true;
+    arena.classList.remove('flash-bad'); void arena.offsetWidth; arena.classList.add('flash-bad'); if(!matchMedia('(prefers-reduced-motion: reduce)').matches) FX.shake(); Audio.bad(); FX.burst(px,py,FX.cssVar('--bad'),24,8);
     setAi(timeout?'Too slow.':pick(AI.bad,Run.rng)); if(navigator.vibrate) try{navigator.vibrate(60)}catch(_){}
   }
-  updateHud();
+  // FIREWALL resolution after 3 steps
+  let extraDelay=0;
+  if(Run.boss && Run.boss.step>=3){
+    if(!Run.boss.failed){ const bonus=Math.round(500*comboMult()); Run.score+=bonus; setLives(Run.lives+1); save.firewalls++; persist(); showOverlay('BREACHED +1','good'); Audio.level(); Portal.happytime(); setAi('…Firewall down. Integrity restored. Annoying.'); floatText('+'+bonus, innerWidth/2, innerHeight/2-60); }
+    else { setAi('Firewall held. As expected.'); }
+    Run.boss=null; extraDelay=500;
+  }
+  updateHud(); renderPatches();
   if(Run.lives<=0){ setTimeout(gameOver,600); return; }
-  setTimeout(nextNode, ok?260:520);
+  setTimeout(nextNode, (ok?260:520)+extraDelay);
 }
 function floatText(txt,x,y){ const d=document.createElement('div'); d.textContent=txt; d.style.cssText=`position:fixed;left:${x}px;top:${y}px;transform:translate(-50%,-50%);font:900 22px var(--mono);color:var(--warn);z-index:8;pointer-events:none;transition:all .6s ease-out;text-shadow:0 0 10px var(--warn)`; document.body.appendChild(d); requestAnimationFrame(()=>{ d.style.top=(y-70)+'px'; d.style.opacity='0'; }); setTimeout(()=>d.remove(),650); }
 
 /* ===================== GAME OVER ===================== */
 let lastResult=null;
+function weaknessLine(stats){
+  const rows=Object.entries(stats).filter(([k,v])=>v.n>=2).map(([k,v])=>({k,acc:(v.n-v.f)/v.n,n:v.n}));
+  if(rows.length<2) return '';
+  rows.sort((a,b)=>a.acc-b.acc); const w=rows[0], s=rows[rows.length-1];
+  if(w.acc>=0.9) return `CLEAN RUN · NO WEAKNESS FOUND`;
+  return `WEAKNESS <b>${TYPE_NAMES[w.k]} ${Math.round(w.acc*100)}%</b> · STRENGTH <i>${TYPE_NAMES[s.k]} ${Math.round(s.acc*100)}%</i>`;
+}
 async function gameOver(){
   Run.active=false; clearArena(); Portal.gameplayStop(); Audio.over();
   const nodes=Run.node-1; const isBest=Run.score>save.best;
-  save.runs++; if(isBest) save.best=Run.score; save.maxCombo=Math.max(save.maxCombo,Run.maxCombo);
-  // day streak
+  if(!Run.rebooted) save.runs++; if(isBest) save.best=Run.score; save.maxCombo=Math.max(save.maxCombo,Run.maxCombo);
+  save.bestNodes=Math.max(save.bestNodes,nodes); save.liesCaught+=Run.lies; Run.lies=0; save.totalNodes+=nodes;
+  for(const [k,v] of Object.entries(Run.typeStats)){ const s=save.typeStats[k]||(save.typeStats[k]={n:0,f:0}); s.n+=v.n; s.f+=v.f; }
   const today=todayKey(); if(save.lastDay!==today){ const y=new Date(Date.now()-864e5).toISOString().slice(0,10); save.dayStreak = save.lastDay===y ? save.dayStreak+1 : 1; save.lastDay=today; }
   if(Run.daily){ save.daily[today]={score:Run.score,nodes,submitted:false}; }
-  const gained=Math.round(Run.score/30 + nodes*4); const prog=addXp(gained); persist();
+  const totalGain=Math.round(Run.score/30 + nodes*4); const gained=totalGain-Run.xpGranted; Run.xpGranted=totalGain;
+  const ach=checkAchievements(); const achXp=ach.reduce((a,x)=>a+x.xp,0);
+  const prog=addXp(gained+achXp); persist();
   lastResult={score:Run.score,nodes,daily:Run.daily,combo:Run.maxCombo,best:isBest};
   $('#over-eyebrow').textContent = Run.daily? '// DAILY BREACH COMPLETE' : isBest? '// NEW RECORD LOGGED' : '// CONNECTION TERMINATED';
   $('#over-score').textContent=fmt(Run.score); $('#over-sub').textContent=`${nodes} nodes breached`;
   $('#over-taunt').textContent = isBest? pick(AI.best) : pick(AI.over);
-  $('#o-best').textContent=fmt(save.best); $('#o-combo').textContent=Run.maxCombo; $('#o-xp').textContent='+'+gained;
+  $('#o-best').textContent=fmt(save.best); $('#o-combo').textContent=Run.maxCombo; $('#o-xp').textContent='+'+(gained+achXp);
+  $('#weakness').innerHTML=weaknessLine(Run.typeStats);
   const need=xpForLevel(save.level); $('#xp-label').textContent=`LVL ${save.level} · ${save.xp}/${need}`; $('#xp-fill').style.width='0%'; setTimeout(()=>$('#xp-fill').style.width=(save.xp/need*100)+'%',80);
-  const un=$('#unlock-note'); un.textContent = prog.newlyUnlocked.length? `🔓 THEME UNLOCKED: ${prog.newlyUnlocked.map(t=>t.name).join(', ')}` : prog.leveled.length? `▲ LEVEL ${save.level}` : '';
-  if(prog.leveled.length){ Audio.level(); Portal.happytime(); }
+  const un=$('#unlock-note'); const notes=[];
+  if(prog.newlyUnlocked.length) notes.push(`🔓 THEME: ${prog.newlyUnlocked.map(t=>t.name).join(', ')}`);
+  if(prog.leveled.length){ const r=rankFor(save.level); notes.push(`▲ LEVEL ${save.level} · ${r[1]}`); }
+  ach.forEach(a=>notes.push(`★ ${a.name} +${a.xp}xp`));
+  un.textContent=(notes.length>4? notes.slice(0,4).concat([`+${notes.length-4} more`]) : notes).join('  ·  ');
+  if(prog.leveled.length||ach.length){ Audio.level(); if(prog.leveled.length) Portal.happytime(); }
+  const canReboot = !Run.rebooted && nodes>=3;
+  const rb=$('#btn-reboot'); rb.classList.toggle('hidden',!canReboot); $('#reboot-sub').textContent = Portal.isReady()? 'watch an ad · +1 integrity · keep your score' : '+1 integrity · keep your score';
   const ds=$('#daily-submit'); ds.classList.toggle('hidden', !(Run.daily && Backend.enabled())); $('#submit-status').textContent=''; $('#name-input').value=save.tag||'';
   $('#btn-again').textContent = Run.daily? 'ENDLESS RUN' : 'AGAIN';
   show('over'); refreshHome();
-  if(save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak();
+  if(!canReboot && save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak();
+}
+async function reboot(){
+  const rb=$('#btn-reboot'); rb.disabled=true; rb.querySelector('small').textContent='loading…';
+  const r=await Portal.rewarded(); rb.disabled=false;
+  if(!r.ok){ rb.querySelector('small').textContent='ad unavailable — try again'; return; }
+  Run.rebooted=true; Run.active=true; Run.combo=0; Run.boss=null; setLives(1); renderPatches();
+  show('game'); Portal.gameplayStart(); Audio.go();
+  await countdown('Rebooting. One integrity point. Don\'t waste it.'); nextNode();
 }
 
 /* ===================== SHARE ===================== */
 async function shareResult(){
   if(!lastResult) return; const r=lastResult;
   const bars='▮'.repeat(Math.min(10,Math.ceil(r.nodes/3)))+'▯'.repeat(Math.max(0,10-Math.ceil(r.nodes/3)));
-  const text=`OVERRIDE ${r.daily?'DAILY BREACH '+todayKey():''}\n${bars} ${fmt(r.score)} pts · ${r.nodes} nodes${r.combo>=5?' · '+r.combo+'x combo':''}\nThink you can beat the AI? ${CONFIG.SHARE_URL}`;
+  const text=`OVERRIDE ${r.daily?'DAILY BREACH '+todayKey():''}\n${bars} ${fmt(r.score)} pts · ${r.nodes} nodes${r.combo>=5?' · '+r.combo+'x combo':''}\nThe AI lies. Can you beat it? ${CONFIG.SHARE_URL}`;
   const file = await renderCard(r).catch(()=>null);
   try{
     if(file && navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],text}); return; }
@@ -614,14 +803,15 @@ async function renderCard(r){
   x.font='900 150px sans-serif'; x.fillStyle=a; x.fillText('OVER',540-160,340); x.fillStyle=b; x.fillText('RIDE',540+170,340);
   x.fillStyle='#fff'; x.font='900 260px sans-serif'; x.fillText(fmt(r.score),540,720);
   x.fillStyle='#7d879e'; x.font='600 40px monospace'; x.fillText(`${r.nodes} NODES BREACHED · ${r.combo}x COMBO`,540,800);
-  x.fillStyle=a; x.font='800 44px sans-serif'; x.fillText('think you can beat the AI?',540,1000);
+  x.fillStyle=a; x.font='800 44px sans-serif'; x.fillText('the AI lies. can you beat it?',540,1000);
   x.fillStyle='#7d879e'; x.font='600 34px monospace'; x.fillText(CONFIG.SHARE_URL.replace(/^https?:\/\//,''),540,1160);
   const blob=await new Promise(res=>c.toBlob(res,'image/png')); return new File([blob],'override.png',{type:'image/png'});
 }
 
-/* ===================== HOME / BOARD / THEMES ===================== */
+/* ===================== HOME / BOARD / PROFILE ===================== */
 function refreshHome(){
   $('#s-best').textContent=fmt(save.best); $('#s-streak').textContent=save.dayStreak; $('#s-runs').textContent=save.runs; $('#home-level').textContent='LVL '+save.level;
+  $('#rank-title').textContent='RANK: '+rankFor(save.level)[1];
   $('#home-taunt').textContent=pick(AI.home); $('#btn-sound').textContent=save.sound?'🔊':'🔇';
   const d=save.daily[todayKey()]; $('#daily-sub').textContent = d? `done today · ${fmt(d.score)} pts` : 'same run for everyone · 1 attempt';
 }
@@ -636,6 +826,19 @@ async function openBoard(){
   $('#board-note').textContent=`${fmt(s.players||0)} players today · resets midnight UTC`;
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function renderProfile(){
+  const r=rankFor(save.level), nr=nextRank(save.level);
+  $('#prof-rank').textContent=r[1]; $('#prof-sub').textContent=`LVL ${save.level}` + (nr? ` · ${nr[1]} at LVL ${nr[0]}` : ' · MAX RANK');
+  $('#prof-xp-fill').style.width=(save.xp/xpForLevel(save.level)*100)+'%';
+  $('#p-best').textContent=fmt(save.best); $('#p-nodes').textContent=save.bestNodes; $('#p-combo').textContent=save.maxCombo; $('#p-lies').textContent=save.liesCaught;
+  const acc=$('#acc-list'); acc.innerHTML='';
+  const rows=Object.entries(save.typeStats).filter(([k,v])=>v.n>0).map(([k,v])=>({k,acc:(v.n-v.f)/v.n})).sort((a,b)=>b.acc-a.acc);
+  if(!rows.length) acc.innerHTML='<div class="muted small">play a run to see your stats</div>';
+  rows.forEach((row,i)=>{ const d=document.createElement('div'); d.className='acc'+(i===rows.length-1&&rows.length>2&&row.acc<0.7?' weak-row':''); d.innerHTML=`<span>${TYPE_NAMES[row.k]||row.k}</span><div class="bar"><i style="width:${Math.round(row.acc*100)}%"></i></div><span class="pct">${Math.round(row.acc*100)}%</span>`; acc.appendChild(d); });
+  const al=$('#ach-list'); al.innerHTML=''; $('#ach-count').textContent=`${save.ach.length}/${ACH.length}`;
+  ACH.forEach(a=>{ const d=document.createElement('div'); d.className='ach'+(save.ach.includes(a.id)?' done':''); d.innerHTML=`<b>${a.name}</b><span>${a.desc} · +${a.xp}xp</span>`; al.appendChild(d); });
+  renderThemes();
+}
 function renderThemes(){
   const g=$('#theme-grid'); g.innerHTML='';
   THEMES.forEach(t=>{ const locked=!save.unlocked.includes(t.id); const d=document.createElement('button'); d.className='theme'+(locked?' locked':'')+(save.theme===t.id?' sel':'');
@@ -647,15 +850,15 @@ function renderThemes(){
 $('#btn-play').onclick=()=>startRun(false);
 $('#btn-daily').onclick=()=>{ const d=save.daily[todayKey()]; if(d){ toast(`already breached today: ${fmt(d.score)}`); openBoard(); return; } startRun(true); };
 $('#btn-board').onclick=openBoard; $('#btn-board-back').onclick=()=>show('home');
-$('#btn-themes').onclick=()=>{ renderThemes(); show('themes'); }; $('#btn-themes-back').onclick=()=>show('home');
+$('#btn-profile').onclick=()=>{ renderProfile(); show('profile'); }; $('#btn-profile-back').onclick=()=>{ refreshHome(); show('home'); };
 $('#btn-sound').onclick=()=>{ save.sound=!save.sound; Audio.setMuted(!save.sound); persist(); refreshHome(); Audio.ensure(); Audio.tap(); };
 $('#btn-again').onclick=()=>startRun(false); $('#btn-home').onclick=()=>{ refreshHome(); show('home'); refreshStats(); };
-$('#btn-share').onclick=shareResult;
+$('#btn-share').onclick=shareResult; $('#btn-reboot').onclick=reboot;
 $('#btn-submit').onclick=async()=>{ const name=$('#name-input').value.trim().replace(/[^\w\-]/g,'').slice(0,12); if(!name){ toast('enter a tag'); return; } const d=save.daily[todayKey()]; if(!d||d.submitted){ toast('already submitted'); return; }
   $('#submit-status').textContent='sending…'; const r=await Backend.submit(todayKey(),name,d.score,d.nodes);
   if(r&&r.ok){ d.submitted=true; save.tag=name; persist(); $('#submit-status').textContent=`on the board · rank #${r.rank||'?'}`; toast('SUBMITTED'); } else { $('#submit-status').textContent='failed: '+(r&&r.reason||'unknown'); } };
-addEventListener('keydown',e=>{ if(e.key===' '&&!Run.active&&$('#home').classList.contains('active')){ e.preventDefault(); startRun(false);} });
-document.addEventListener('visibilitychange',()=>{ if(document.hidden&&Run.active){ Run.lives=0; gameOver(); } });
+addEventListener('keydown',e=>{ if(e.key===' '&&!Run.active&&$('#home').classList.contains('active')){ e.preventDefault(); startRun(false);} if(/^[1-3]$/.test(e.key)&&Run.active) usePatch(Number(e.key)-1); });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&Run.active&&!Run.resolved){ setAi('Signal lost.'); resolve(false,null,true); } });
 document.addEventListener('contextmenu',e=>e.preventDefault());
 
 applyTheme(save.theme); Audio.setMuted(!save.sound); refreshHome(); refreshStats(); Portal.init();

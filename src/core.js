@@ -1,7 +1,7 @@
 'use strict';
 /* ===================== CONFIG ===================== */
 const CONFIG = {
-  BACKEND_URL: 'https://override-board.override-board.workers.dev',            // e.g. 'https://override-board.yourname.workers.dev' (set after deploying worker/)
+  BACKEND_URL: 'https://override-board.override-board.workers.dev',
   SHARE_URL: 'https://thriver652.github.io/override/',
   ADS_EVERY_N_RUNS: 3,        // portal ad break frequency at game over
   VERSION: '1.2.0'
@@ -189,8 +189,10 @@ const Telemetry = (()=>{
     if(!CONFIG.BACKEND_URL) return;
     try{
       const body=JSON.stringify(Object.assign({type,sid,portal:Portal.kind,v:CONFIG.VERSION},data));
-      if(navigator.sendBeacon){ navigator.sendBeacon(`${CONFIG.BACKEND_URL}/event`, new Blob([body],{type:'application/json'})); }
-      else fetch(`${CONFIG.BACKEND_URL}/event`,{method:'POST',headers:{'content-type':'application/json'},body,keepalive:true}).catch(()=>{});
+      // text/plain is CORS-safelisted, so the beacon goes cross-origin without a preflight; the worker parses the body as JSON regardless.
+      let sent=false;
+      try{ if(navigator.sendBeacon) sent=navigator.sendBeacon(`${CONFIG.BACKEND_URL}/event`, new Blob([body],{type:'text/plain'})); }catch(e){ sent=false; }
+      if(!sent) fetch(`${CONFIG.BACKEND_URL}/event`,{method:'POST',headers:{'content-type':'text/plain'},body,keepalive:true,mode:'cors'}).catch(()=>{});
     }catch(e){}
   }
   addEventListener('error',e=>{ if(errCount++<5) send('error',{msg:`${e.message} @${(e.filename||'').split('/').pop()}:${e.lineno}`}); });

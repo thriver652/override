@@ -2,7 +2,7 @@
 
 You vs. a rogue AI. Endless rapid-fire micro-challenges that speed up as you survive — and from node 3 the AI starts lying to you. Daily seeded run with a global board. Single HTML file, no runtime AI cost.
 
-## What's in the game (v1.1)
+## What's in the game (v1.2)
 
 - **11 challenge types**: tap, odd-one-out, timing bar, memory sequence, order, swipe, math, Stroop, hold, count, reflex.
 - **The AI lies** from node 3 (18% → 40% of eligible nodes). A struck-through instruction means the opposite is true. Big "IT LIED" / "CAUGHT IT" reveal after each one.

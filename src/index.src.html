@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="OVERRIDE — you vs. a rogue AI. Endless rapid-fire challenges that get faster the longer you survive. Beat the daily run, climb the global board.">
+<meta name="theme-color" content="#05060a">
+<meta property="og:title" content="OVERRIDE — beat the rogue AI">
+<meta property="og:description" content="Rapid-fire challenges. 3 integrity points. How long can you last?">
+<title>OVERRIDE</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305060a'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%2300f0ff' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23ff2bd6'/%3E%3C/svg%3E">
+<style>
+/* __CSS__ */
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="scan"></div>
+<div id="app">
+
+  <!-- HOME -->
+  <section id="home" class="screen active">
+    <div class="hud-top">
+      <button class="icon-btn" id="btn-sound" title="Sound">🔊</button>
+      <div class="pill" id="home-level">LVL 1</div>
+      <button class="icon-btn" id="btn-themes" title="Themes">◐</button>
+    </div>
+    <div class="home-body">
+      <div class="eyebrow">// SYSTEM STATUS: HOSTILE</div>
+      <h1 class="logo"><span>OVER</span><span class="alt">RIDE</span></h1>
+      <p class="ai-line" id="home-taunt">A rogue AI has locked you out. It thinks you're slow.</p>
+      <div class="stat-row">
+        <div class="stat"><b id="s-best">0</b><span>best</span></div>
+        <div class="stat"><b id="s-streak">0</b><span>day streak</span></div>
+        <div class="stat"><b id="s-runs">0</b><span>runs</span></div>
+      </div>
+      <button class="cta" id="btn-play">RUN <small>endless</small></button>
+      <button class="cta alt" id="btn-daily">DAILY BREACH <small id="daily-sub">same run for everyone</small></button>
+      <button class="ghost" id="btn-board">GLOBAL BOARD</button>
+    </div>
+    <div class="foot">
+      <span id="players-today"></span>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen">
+    <div class="hud">
+      <div class="integrity" id="integrity"><i></i><i></i><i></i></div>
+      <div class="score-wrap"><div class="score" id="score">0</div><div class="combo" id="combo"></div></div>
+      <div class="pill" id="node">NODE 1</div>
+    </div>
+    <div class="timer"><div id="timer-bar"></div></div>
+    <div class="ai-bar" id="ai-bar"><span class="ai-tag">AI</span><span id="ai-msg">…</span></div>
+    <div class="instr" id="instr"></div>
+    <div class="arena" id="arena"></div>
+  </section>
+
+  <!-- GAME OVER -->
+  <section id="over" class="screen">
+    <div class="over-body">
+      <div class="eyebrow" id="over-eyebrow">// CONNECTION TERMINATED</div>
+      <div class="big-score" id="over-score">0</div>
+      <div class="over-sub" id="over-sub">nodes breached</div>
+      <p class="ai-line" id="over-taunt"></p>
+      <div class="over-grid">
+        <div><b id="o-best">0</b><span>best</span></div>
+        <div><b id="o-combo">0</b><span>max combo</span></div>
+        <div><b id="o-xp">+0</b><span>xp</span></div>
+      </div>
+      <div class="xp-track"><div id="xp-fill"></div><span id="xp-label"></span></div>
+      <div id="unlock-note" class="unlock"></div>
+      <div id="daily-submit" class="submit hidden">
+        <input id="name-input" maxlength="12" placeholder="your tag" autocomplete="off" spellcheck="false">
+        <button id="btn-submit" class="ghost small">SUBMIT TO BOARD</button>
+        <div id="submit-status"></div>
+      </div>
+      <div class="btn-row">
+        <button class="cta" id="btn-again">AGAIN</button>
+        <button class="cta alt" id="btn-share">SHARE</button>
+      </div>
+      <button class="ghost" id="btn-home">HOME</button>
+    </div>
+  </section>
+
+  <!-- BOARD -->
+  <section id="board" class="screen">
+    <div class="hud-top">
+      <button class="icon-btn" id="btn-board-back">←</button>
+      <div class="pill">DAILY BREACH</div>
+      <span class="icon-btn"></span>
+    </div>
+    <div class="board-body">
+      <div class="eyebrow" id="board-date"></div>
+      <ol id="board-list"><li class="muted">loading…</li></ol>
+      <p class="muted small" id="board-note"></p>
+    </div>
+  </section>
+
+  <!-- THEMES -->
+  <section id="themes" class="screen">
+    <div class="hud-top">
+      <button class="icon-btn" id="btn-themes-back">←</button>
+      <div class="pill">THEMES</div>
+      <span class="icon-btn"></span>
+    </div>
+    <div class="theme-grid" id="theme-grid"></div>
+  </section>
+
+</div>
+<div id="toast"></div>
+<script>
+/* __JS__ */
+</script>
+</body>
+</html>

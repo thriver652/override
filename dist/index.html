@@ -309,7 +309,7 @@ const CONFIG = {
   BACKEND_URL: '',            // e.g. 'https://override-board.yourname.workers.dev' (set after deploying worker/)
   SHARE_URL: location.origin + location.pathname,
   ADS_EVERY_N_RUNS: 3,        // portal ad break frequency at game over
-  VERSION: '1.1.0'
+  VERSION: '1.2.0'
 };
 
 /* ===================== UTIL ===================== */
@@ -486,6 +486,23 @@ const Portal = (()=>{
   };
 })();
 
+/* ===================== TELEMETRY (privacy-light: no IDs beyond a per-page-load session id) ===================== */
+const Telemetry = (()=>{
+  const sid = Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+  let errCount=0;
+  function send(type,data={}){
+    if(!CONFIG.BACKEND_URL) return;
+    try{
+      const body=JSON.stringify(Object.assign({type,sid,portal:Portal.kind,v:CONFIG.VERSION},data));
+      if(navigator.sendBeacon){ navigator.sendBeacon(`${CONFIG.BACKEND_URL}/event`, new Blob([body],{type:'application/json'})); }
+      else fetch(`${CONFIG.BACKEND_URL}/event`,{method:'POST',headers:{'content-type':'application/json'},body,keepalive:true}).catch(()=>{});
+    }catch(e){}
+  }
+  addEventListener('error',e=>{ if(errCount++<5) send('error',{msg:`${e.message} @${(e.filename||'').split('/').pop()}:${e.lineno}`}); });
+  addEventListener('unhandledrejection',e=>{ if(errCount++<5) send('error',{msg:'promise: '+String(e.reason&&e.reason.message||e.reason).slice(0,200)}); });
+  return {send};
+})();
+
 /* ===================== BACKEND ===================== */
 const Backend = {
   enabled: ()=>!!CONFIG.BACKEND_URL,
@@ -660,7 +677,7 @@ function startRun(daily){
     patches:[],slowLeft:0,scanLeft:0,shield:false,boss:null,rebooted:false,xpGranted:0,typeStats:{},lies:0,pbShown:false,lastPatchCombo:0});
   Run.rng = daily ? mulberry32(hashStr('override:'+Run.dayKey)) : Math.random;
   $$('#integrity i').forEach(i=>i.classList.remove('off')); renderPatches();
-  updateHud(); show('game'); Portal.gameplayStart();
+  updateHud(); show('game'); Portal.gameplayStart(); Telemetry.send('run_start',{daily});
   countdown().then(nextNode);
 }
 async function countdown(msg){
@@ -754,6 +771,7 @@ async function gameOver(){
   const ach=checkAchievements(); const achXp=ach.reduce((a,x)=>a+x.xp,0);
   const prog=addXp(gained+achXp); persist();
   lastResult={score:Run.score,nodes,daily:Run.daily,combo:Run.maxCombo,best:isBest};
+  Telemetry.send('run_end',{nodes,score:Run.score,daily:Run.daily,rebooted:Run.rebooted});
   $('#over-eyebrow').textContent = Run.daily? '// DAILY BREACH COMPLETE' : isBest? '// NEW RECORD LOGGED' : '// CONNECTION TERMINATED';
   $('#over-score').textContent=fmt(Run.score); $('#over-sub').textContent=`${nodes} nodes breached`;
   $('#over-taunt').textContent = isBest? pick(AI.best) : pick(AI.over);
@@ -777,14 +795,14 @@ async function reboot(){
   const rb=$('#btn-reboot'); rb.disabled=true; rb.querySelector('small').textContent='loading…';
   const r=await Portal.rewarded(); rb.disabled=false;
   if(!r.ok){ rb.querySelector('small').textContent='ad unavailable — try again'; return; }
-  Run.rebooted=true; Run.active=true; Run.combo=0; Run.boss=null; setLives(1); renderPatches();
+  Run.rebooted=true; Run.active=true; Run.combo=0; Run.boss=null; setLives(1); renderPatches(); Telemetry.send('reboot',{free:!!r.free});
   show('game'); Portal.gameplayStart(); Audio.go();
   await countdown('Rebooting. One integrity point. Don\'t waste it.'); nextNode();
 }
 
 /* ===================== SHARE ===================== */
 async function shareResult(){
-  if(!lastResult) return; const r=lastResult;
+  if(!lastResult) return; const r=lastResult; Telemetry.send('share',{daily:r.daily});
   const bars='▮'.repeat(Math.min(10,Math.ceil(r.nodes/3)))+'▯'.repeat(Math.max(0,10-Math.ceil(r.nodes/3)));
   const text=`OVERRIDE ${r.daily?'DAILY BREACH '+todayKey():''}\n${bars} ${fmt(r.score)} pts · ${r.nodes} nodes${r.combo>=5?' · '+r.combo+'x combo':''}\nThe AI lies. Can you beat it? ${CONFIG.SHARE_URL}`;
   const file = await renderCard(r).catch(()=>null);

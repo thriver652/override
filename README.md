@@ -30,7 +30,7 @@ test/covers.py       re-renders the cover images (python3 test/covers.py)
 
 ## Step 1 — host your own copy (10 minutes, free)
 
-Option A, GitHub Pages: create a repo, push `dist/index.html` renamed to `index.html`, enable Pages in Settings. Done: `https://<you>.github.io/<repo>/`.
+Option A, GitHub Pages: push this repo, then Settings → Pages → Source: **GitHub Actions**. The included `.github/workflows/pages.yml` publishes `dist/` on every push to `main`. Done: `https://<you>.github.io/<repo>/`.
 
 Option B, Cloudflare Pages / Netlify / Vercel: drag the `dist` folder onto their dashboard.
 
@@ -41,9 +41,14 @@ Then set `CONFIG.SHARE_URL` in `src/core.js` to that URL (it's what the share ca
 ```
 cd worker
 npx wrangler login
-npx wrangler kv namespace create BOARD        # paste the printed id into wrangler.toml
-npx wrangler deploy                            # prints https://override-board.<you>.workers.dev
+npx wrangler kv namespace create BOARD                       # paste the printed id into wrangler.toml
+npx wrangler d1 create override-db                           # paste database_id into wrangler.toml
+npx wrangler d1 execute override-db --remote --file=schema.sql
+#  …and change DASH_KEY in wrangler.toml to something private
+npx wrangler deploy                                          # prints https://override-board.<you>.workers.dev
 ```
+
+The worker also receives gameplay telemetry (run_start / run_end / reboot / share / error) into D1 and serves a private dashboard at `/dash?key=<DASH_KEY>` with a death curve, per-day totals, reboot rate, per-portal averages and grouped player-side JS errors. Free tiers: KV 1k writes/day (leaderboard only), D1 100k writes/day (events).
 
 Put that URL into `CONFIG.BACKEND_URL` in `src/core.js`, rebuild, redeploy the page. The home screen now shows "N HUMANS BREACHED TODAY", the daily run gets a submit box, and GLOBAL BOARD works. Free tier limits (100k reads / 1k writes per day) cover roughly 1,000 daily submissions; the board is one KV key per day so reads are cheap.
 

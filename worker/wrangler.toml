@@ -2,8 +2,22 @@ name = "override-board"
 main = "worker.js"
 compatibility_date = "2026-01-01"
 
-# Create the namespace first:  npx wrangler kv namespace create BOARD
-# then paste the id it prints below.
+# ---- Leaderboard (KV) ----
+# npx wrangler kv namespace create BOARD   -> paste the id below
 [[kv_namespaces]]
 binding = "BOARD"
 id = "PASTE_KV_NAMESPACE_ID_HERE"
+
+# ---- Telemetry (D1, free SQLite) ----
+# npx wrangler d1 create override-db       -> paste the database_id below
+# npx wrangler d1 execute override-db --remote --file=schema.sql
+[[d1_databases]]
+binding = "DB"
+database_name = "override-db"
+database_id = "PASTE_D1_DATABASE_ID_HERE"
+
+# ---- Dashboard password ----
+# Change this to something long and private. Open the dashboard at
+#   https://<your-worker>.workers.dev/dash?key=<DASH_KEY>
+[vars]
+DASH_KEY = "change-me-to-a-long-random-string"

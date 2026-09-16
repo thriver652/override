@@ -16,7 +16,7 @@ GitHub becomes the single source of truth: every change goes there, the live sit
 
 1. Click Publish repository. Untick "Keep this code private" (Pages is free only on public repos). Publish.
 
-1. On github.com open the repo → Settings → Pages. Source: Deploy from a branch. Branch: main, folder: /dist. Save. Wait 1–2 minutes; the page shows your URL, e.g. https://YOURNAME.github.io/override/.
+1. On github.com open the repo → Settings → Pages. Under Source choose GitHub Actions (not "Deploy from a branch" — that can't publish the dist folder). The repo already contains .github/workflows/pages.yml, which publishes dist/ on every push to main. Open the Actions tab: the first "Deploy to GitHub Pages" run finishes in about a minute and prints your URL, e.g. https://thriver652.github.io/override/.
 
 1. Open that URL on your phone. It's your game, live. This URL is what you'll give CrazyGames, put on social, and print on the share card.
 
@@ -41,7 +41,16 @@ npx wrangler kv namespace create BOARD
 
 It prints an id = "…" line. Paste that id into wrangler.toml where it says PASTE_KV_NAMESPACE_ID_HERE.
 
-1. Run npx wrangler deploy. It prints a URL like https://override-board.YOURNAME.workers.dev. Open it; you should see {"ok":true,…}.
+1. Create the telemetry database (also free) and load its schema:
+
+```
+npx wrangler d1 create override-db
+npx wrangler d1 execute override-db --remote --file=schema.sql
+```
+
+The first command prints a database_id; paste it into wrangler.toml where it says PASTE_D1_DATABASE_ID_HERE. While you're in that file, change DASH_KEY to a long private string — it's the password for your stats dashboard.
+
+1. Run npx wrangler deploy. It prints a URL like https://override-board.YOURNAME.workers.dev. Open it; you should see {"ok":true,…,"telemetry":true}.
 
 1. In src/core.js, set BACKEND_URL to that URL (no trailing slash). Rebuild, commit, push.
 
@@ -82,6 +91,34 @@ What decides Full launch: average playtime and D1/D7 return rate, both visible i
 1. Hold Poki until you have 7 days of CrazyGames data. Poki is curated and your application is far stronger with "X thousand plays, Y minutes average session" in it.
 
 1. Post the tagline cover (covers/social_portrait_tagline.png) plus your URL: r/WebGames, r/incremental_games (Sunday thread), two Discord servers you're already in. Record one 15-second vertical clip of a lie node ending in IT LIED and post it to Shorts/Reels/TikTok with the URL in the caption. That moment is the clip.
+
+## MONITOR Four layers, checked in this order
+
+5 minutes a day in week one, then twice a week
+
+### 1 · Is it up and deploying?
+
+GitHub → Actions tab: every push shows a "Deploy to GitHub Pages" run; green means live. Red usually means dist/index.html is broken — run node build.js and push again. For outages you'd otherwise never hear about, add both your Pages URL and your worker URL at uptimerobot.com (free, 5-minute checks, email alert).
+
+### 2 · Who's arriving, from where?
+
+GitHub Pages has no analytics, so use Cloudflare Web Analytics (free, no cookies, no consent banner): Cloudflare dashboard → Web Analytics → Add a site → enter your Pages hostname → copy the one-line <script> beacon into src/index.src.html just before </body>, rebuild, push. You get visits, countries, devices and referrers — which tells you whether a Reddit post or a Short actually sent people.
+
+### 3 · How are they playing? (your own dashboard)
+
+The game now sends five tiny events to your worker: run_start, run_end (nodes, score, daily, rebooted, portal), reboot, share, and error (JavaScript errors from players' browsers, capped at 5 per session). They land in the free D1 database, and your private dashboard reads them:
+
+```
+https://override-board.YOURNAME.workers.dev/dash?key=YOUR_DASH_KEY
+```
+
+It shows sessions, runs, average nodes, reboot rate, shares, daily-run participation, abandoned runs, a death curve (what % of runs reach node 5 / 10 / 20 / 30 / 50), per-portal averages, per-day rows, and grouped errors. Bookmark it on your phone. Nothing personal is stored: no names, no IPs, just a random per-page-load id.
+
+What good looks like after week one: average nodes 8–15 for a mixed audience, at least 40% of runs reaching node 5, reboot rate 15–30% (that's your rewarded-ad revenue), zero recurring errors. The death curve is the single most useful chart: a cliff at one node means one challenge type is confusing, not hard.
+
+### 4 · Money and promotion
+
+CrazyGames developer dashboard, once approved: plays, average playtime, D1/D7 retention, revenue. Check it every other day in week one. Playtime and D1 return decide Full launch; the tuning table below maps each weak number to the knob that fixes it.
 
 ## STAGE 5 Week 1–2: read the data, tune, push
 
@@ -165,7 +202,9 @@ The compounding move: once OVERRIDE is stable, build game two on the same engine
 
 - [ ] SHARE_URL set; the share text prints the right link
 
-- [ ] Worker deployed; BACKEND_URL set; I'm on the Daily Breach board
+- [ ] Worker deployed (KV + D1); BACKEND_URL set; I'm on the Daily Breach board
+
+- [ ] Opened /dash?key=… and saw my own test run in it; UptimeRobot monitors added
 
 - [ ] Played 10 runs on my phone; ramp feels fair; first FIREWALL is reachable
 

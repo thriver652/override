@@ -165,7 +165,7 @@ function startRun(daily){
     patches:[],slowLeft:0,scanLeft:0,shield:false,boss:null,rebooted:false,xpGranted:0,typeStats:{},lies:0,pbShown:false,lastPatchCombo:0});
   Run.rng = daily ? mulberry32(hashStr('override:'+Run.dayKey)) : Math.random;
   $$('#integrity i').forEach(i=>i.classList.remove('off')); renderPatches();
-  updateHud(); show('game'); Portal.gameplayStart();
+  updateHud(); show('game'); Portal.gameplayStart(); Telemetry.send('run_start',{daily});
   countdown().then(nextNode);
 }
 async function countdown(msg){
@@ -259,6 +259,7 @@ async function gameOver(){
   const ach=checkAchievements(); const achXp=ach.reduce((a,x)=>a+x.xp,0);
   const prog=addXp(gained+achXp); persist();
   lastResult={score:Run.score,nodes,daily:Run.daily,combo:Run.maxCombo,best:isBest};
+  Telemetry.send('run_end',{nodes,score:Run.score,daily:Run.daily,rebooted:Run.rebooted});
   $('#over-eyebrow').textContent = Run.daily? '// DAILY BREACH COMPLETE' : isBest? '// NEW RECORD LOGGED' : '// CONNECTION TERMINATED';
   $('#over-score').textContent=fmt(Run.score); $('#over-sub').textContent=`${nodes} nodes breached`;
   $('#over-taunt').textContent = isBest? pick(AI.best) : pick(AI.over);
@@ -282,14 +283,14 @@ async function reboot(){
   const rb=$('#btn-reboot'); rb.disabled=true; rb.querySelector('small').textContent='loading…';
   const r=await Portal.rewarded(); rb.disabled=false;
   if(!r.ok){ rb.querySelector('small').textContent='ad unavailable — try again'; return; }
-  Run.rebooted=true; Run.active=true; Run.combo=0; Run.boss=null; setLives(1); renderPatches();
+  Run.rebooted=true; Run.active=true; Run.combo=0; Run.boss=null; setLives(1); renderPatches(); Telemetry.send('reboot',{free:!!r.free});
   show('game'); Portal.gameplayStart(); Audio.go();
   await countdown('Rebooting. One integrity point. Don\'t waste it.'); nextNode();
 }
 
 /* ===================== SHARE ===================== */
 async function shareResult(){
-  if(!lastResult) return; const r=lastResult;
+  if(!lastResult) return; const r=lastResult; Telemetry.send('share',{daily:r.daily});
   const bars='▮'.repeat(Math.min(10,Math.ceil(r.nodes/3)))+'▯'.repeat(Math.max(0,10-Math.ceil(r.nodes/3)));
   const text=`OVERRIDE ${r.daily?'DAILY BREACH '+todayKey():''}\n${bars} ${fmt(r.score)} pts · ${r.nodes} nodes${r.combo>=5?' · '+r.combo+'x combo':''}\nThe AI lies. Can you beat it? ${CONFIG.SHARE_URL}`;
   const file = await renderCard(r).catch(()=>null);

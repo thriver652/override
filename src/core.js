@@ -4,7 +4,7 @@ const CONFIG = {
   BACKEND_URL: '',            // e.g. 'https://override-board.yourname.workers.dev' (set after deploying worker/)
   SHARE_URL: location.origin + location.pathname,
   ADS_EVERY_N_RUNS: 3,        // portal ad break frequency at game over
-  VERSION: '1.1.0'
+  VERSION: '1.2.0'
 };
 
 /* ===================== UTIL ===================== */
@@ -179,6 +179,23 @@ const Portal = (()=>{
       resumeAfterAd(); return {ok,free:false};
     }
   };
+})();
+
+/* ===================== TELEMETRY (privacy-light: no IDs beyond a per-page-load session id) ===================== */
+const Telemetry = (()=>{
+  const sid = Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+  let errCount=0;
+  function send(type,data={}){
+    if(!CONFIG.BACKEND_URL) return;
+    try{
+      const body=JSON.stringify(Object.assign({type,sid,portal:Portal.kind,v:CONFIG.VERSION},data));
+      if(navigator.sendBeacon){ navigator.sendBeacon(`${CONFIG.BACKEND_URL}/event`, new Blob([body],{type:'application/json'})); }
+      else fetch(`${CONFIG.BACKEND_URL}/event`,{method:'POST',headers:{'content-type':'application/json'},body,keepalive:true}).catch(()=>{});
+    }catch(e){}
+  }
+  addEventListener('error',e=>{ if(errCount++<5) send('error',{msg:`${e.message} @${(e.filename||'').split('/').pop()}:${e.lineno}`}); });
+  addEventListener('unhandledrejection',e=>{ if(errCount++<5) send('error',{msg:'promise: '+String(e.reason&&e.reason.message||e.reason).slice(0,200)}); });
+  return {send};
 })();
 
 /* ===================== BACKEND ===================== */

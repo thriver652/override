@@ -18,14 +18,27 @@ def html(w, h, scale, tagline=True):
     .eye{{position:relative;width:{int(150*scale)}px;height:{int(150*scale)}px;border-radius:50%;border:{int(12*scale)}px solid #00f0ff;box-shadow:0 0 {int(60*scale)}px #00f0ff,inset 0 0 {int(40*scale)}px rgba(0,240,255,.4)}}
     .eye::after{{content:"";position:absolute;left:50%;top:50%;width:{int(46*scale)}px;height:{int(46*scale)}px;margin:{int(-23*scale)}px;border-radius:50%;background:#ff2bd6;box-shadow:0 0 {int(50*scale)}px #ff2bd6}}
     .eye::before{{content:"";position:absolute;left:-{int(60*scale)}px;right:-{int(60*scale)}px;top:50%;height:{int(4*scale)}px;margin-top:-{int(2*scale)}px;background:linear-gradient(90deg,transparent,#00f0ff,transparent);opacity:.7}}
-    .logo{{font-size:{int(190*scale)}px;font-weight:900;letter-spacing:-.05em;line-height:.9;margin-top:{int(10*scale)}px}}
+    .logo{{font-size:{int(200*scale)}px;font-weight:900;letter-spacing:-.05em;line-height:.9;margin-top:{int(10*scale)}px}}
     .logo span{{color:#00f0ff;text-shadow:0 0 {int(40*scale)}px rgba(0,240,255,.8),0 0 {int(90*scale)}px rgba(0,240,255,.35)}}
     .logo .b{{color:#ff2bd6;text-shadow:0 0 {int(40*scale)}px rgba(255,43,214,.8),0 0 {int(90*scale)}px rgba(255,43,214,.35)}}
     .tag{{font-family:Consolas,Menlo,monospace;font-size:{int(34*scale)}px;letter-spacing:.35em;color:#e8f1ff;opacity:.9;text-transform:uppercase}}
     .tag b{{color:#ff2bd6;font-weight:800}}
+    .play{{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{int(24*scale)}px;opacity:.28;transform:scale(1.25) rotate(-8deg);filter:blur({int(1*scale)}px)}}
+    .cells{{display:grid;grid-template-columns:repeat(3,1fr);gap:{int(14*scale)}px;width:{int(560*scale)}px}}
+    .cells i{{aspect-ratio:1;border-radius:{int(22*scale)}px;border:{max(1,int(2*scale))}px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font:800 {int(64*scale)}px Consolas,Menlo,monospace;color:#7d879e;font-style:normal}}
+    .cells i.on{{background:#00f0ff;color:#03121a;border-color:#00f0ff;box-shadow:0 0 {int(50*scale)}px #00f0ff}}
+    .hud{{display:flex;align-items:center;gap:{int(24*scale)}px;width:{int(560*scale)}px}}
+    .int{{display:flex;gap:{int(8*scale)}px}}.int b{{display:block;width:{int(22*scale)}px;height:{int(34*scale)}px;border-radius:{int(6*scale)}px;background:#39ff88;box-shadow:0 0 {int(16*scale)}px #39ff88}}.int b.off{{background:rgba(255,255,255,.1);box-shadow:none}}
+    .timer{{flex:1;height:{int(12*scale)}px;border-radius:{int(6*scale)}px;background:rgba(255,255,255,.1);overflow:hidden}}.timer b{{display:block;width:62%;height:100%;background:linear-gradient(90deg,#00f0ff,#ff2bd6)}}
     .corner{{position:absolute;font-family:Consolas,monospace;font-size:{int(18*scale)}px;letter-spacing:.3em;color:rgba(232,241,255,.35)}}
     </style></head><body>
     <div class="bg"></div><div class="grid"></div>
+    <div class="play">
+      <div class="cells">
+        <i>◆</i><i>●</i><i>▲</i><i class="on">■</i><i>✦</i><i>◈</i><i>⬢</i><i>◉</i><i>✚</i>
+      </div>
+      <div class="hud"><span class="int"><b></b><b></b><b class="off"></b></span><span class="timer"><b></b></span></div>
+    </div>
     <div class="wrap">
       <div class="eye"></div>
       <div class="logo"><span>OVER</span><span class="b">RIDE</span></div>

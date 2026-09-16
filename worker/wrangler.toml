@@ -6,7 +6,7 @@ compatibility_date = "2026-01-01"
 # npx wrangler kv namespace create BOARD   -> paste the id below
 [[kv_namespaces]]
 binding = "BOARD"
-id = "PASTE_KV_NAMESPACE_ID_HERE"
+id = "f1fc32c5814646af9f55286522246e64"
 
 # ---- Telemetry (D1, free SQLite) ----
 # npx wrangler d1 create override-db       -> paste the database_id below
@@ -14,10 +14,8 @@ id = "PASTE_KV_NAMESPACE_ID_HERE"
 [[d1_databases]]
 binding = "DB"
 database_name = "override-db"
-database_id = "PASTE_D1_DATABASE_ID_HERE"
+database_id = "89e1e5ef-c2d8-4d83-8a54-608c447a4d34"
 
 # ---- Dashboard password ----
 # Change this to something long and private. Open the dashboard at
 #   https://<your-worker>.workers.dev/dash?key=<DASH_KEY>
-[vars]
-DASH_KEY = "change-me-to-a-long-random-string"

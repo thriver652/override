@@ -1,8 +1,8 @@
 'use strict';
 /* ===================== CONFIG ===================== */
 const CONFIG = {
-  BACKEND_URL: '',            // e.g. 'https://override-board.yourname.workers.dev' (set after deploying worker/)
-  SHARE_URL: location.origin + location.pathname,
+  BACKEND_URL: 'https://override-board.override-board.workers.dev',            // e.g. 'https://override-board.yourname.workers.dev' (set after deploying worker/)
+  SHARE_URL: 'https://thriver652.github.io/override/',
   ADS_EVERY_N_RUNS: 3,        // portal ad break frequency at game over
   VERSION: '1.2.0'
 };

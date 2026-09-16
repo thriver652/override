@@ -60,7 +60,7 @@ export default {
     /* ---------- telemetry ---------- */
     if (req.method === 'POST' && url.pathname === '/event') {
       if (!env.DB) return json({ ok: false, reason: 'no db' }, 503);
-      let b; try { b = await req.json(); } catch { return json({ ok: false }, 400); }
+      let b; try { b = JSON.parse(await req.text()); } catch { return json({ ok: false }, 400); }   // body may arrive as text/plain (sendBeacon)
       const type = String(b.type || ''); if (!EVENT_TYPES.has(type)) return json({ ok: false }, 400);
       const row = {
         ts: Date.now(), day: today(), type,

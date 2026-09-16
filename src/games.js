@@ -277,7 +277,6 @@ async function gameOver(){
   const ds=$('#daily-submit'); ds.classList.toggle('hidden', !(Run.daily && Backend.enabled())); $('#submit-status').textContent=''; $('#name-input').value=save.tag||'';
   $('#btn-again').textContent = Run.daily? 'ENDLESS RUN' : 'AGAIN';
   show('over'); refreshHome();
-  if(!canReboot && save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak();
 }
 async function reboot(){
   const rb=$('#btn-reboot'); rb.disabled=true; rb.querySelector('small').textContent='loading…';
@@ -358,7 +357,7 @@ $('#btn-daily').onclick=()=>{ const d=save.daily[todayKey()]; if(d){ toast(`alre
 $('#btn-board').onclick=openBoard; $('#btn-board-back').onclick=()=>show('home');
 $('#btn-profile').onclick=()=>{ renderProfile(); show('profile'); }; $('#btn-profile-back').onclick=()=>{ refreshHome(); show('home'); };
 $('#btn-sound').onclick=()=>{ save.sound=!save.sound; Audio.setMuted(!save.sound); persist(); refreshHome(); Audio.ensure(); Audio.tap(); };
-$('#btn-again').onclick=()=>startRun(false); $('#btn-home').onclick=()=>{ refreshHome(); show('home'); refreshStats(); };
+$('#btn-again').onclick=async()=>{ if(save.runs>0 && save.runs % CONFIG.ADS_EVERY_N_RUNS===0) await Portal.adBreak(); startRun(false); };   // midgame ad at a natural break, every Nth run, 3-min cooldown respected $('#btn-home').onclick=()=>{ refreshHome(); show('home'); refreshStats(); };
 $('#btn-share').onclick=shareResult; $('#btn-reboot').onclick=reboot;
 $('#btn-submit').onclick=async()=>{ const name=$('#name-input').value.trim().replace(/[^\w\-]/g,'').slice(0,12); if(!name){ toast('enter a tag'); return; } const d=save.daily[todayKey()]; if(!d||d.submitted){ toast('already submitted'); return; }
   $('#submit-status').textContent='sending…'; const r=await Backend.submit(todayKey(),name,d.score,d.nodes);
